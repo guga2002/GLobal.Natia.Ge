@@ -37,14 +37,14 @@ namespace GlobalManagment.Controllers
 
             if (!isRunning)
             {
-                string exePath = @"C:\Users\MONITORING PC\source\repos\Natia.UI\Natia.UI\bin\Release\net8.0\publish\Natia.UI.exe";
+                string exePath = @"C:\Users\Administrator\source\repos\Natia.UI\Natia.UI\bin\Release\net8.0\publish\Natia.UI.exe";
                 StartProcess(exePath);
             }
 
             var date = DateTime.UtcNow;
             var dateRobot = await HeartBeat(false);
 
-            if ((date - dateRobot).TotalMinutes > 2)
+            if ((date - dateRobot).TotalMinutes > 4)
             {
                 return await Reload();
             }
@@ -56,7 +56,7 @@ namespace GlobalManagment.Controllers
         [AllowAnonymous]
         public async Task<string> Reload()
         {
-            string exePath = @"C:\Users\MONITORING PC\source\repos\Natia.UI\Natia.UI\bin\Release\net8.0\publish\Natia.UI.exe";
+            string exePath = @"C:\Users\Administrator\source\repos\Natia.UI\Natia.UI\bin\Release\net8.0\publish\Natia.UI.exe";
             string processName = "Natia.UI";
 
             StopProcess(processName);

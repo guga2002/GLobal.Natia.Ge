@@ -1,9 +1,12 @@
 ﻿using Common.Domain.Interface;
 using Common.Domain.Models;
 using Common.Domain.Models.ViewModels;
+using Common.Domain.SignalR;
 using Common.Persistance.Extensions;
 using Common.Persistance.Interface;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using static Azure.Core.HttpHeader;
 
 namespace GLobal.Natia.Ge.Controllers;
 
@@ -12,11 +15,13 @@ public class UniteController : Controller
     private readonly ISatteliteFrequencyService ser;
     private readonly IService chanells;
     private readonly ITemperatureService temperature;
-    public UniteController(ISatteliteFrequencyService ser, IService chanells, IService seq, ITemperatureService temperature)
+    private readonly IHubContext<UniteMonitoringHub> _hub;
+    public UniteController(ISatteliteFrequencyService ser, IService chanells, IService seq, ITemperatureService temperature, IHubContext<UniteMonitoringHub> hub)
     {
         this.ser = ser;
         this.chanells = chanells;
         this.temperature = temperature;
+        _hub=hub;
     }
 
     public async Task<IActionResult> Index()
@@ -94,6 +99,21 @@ public class UniteController : Controller
             var result = await temperature.GetCUrrentTemperature();
             mod.temperature = result.temperature;
             mod.Humidity = result.humidity;
+
+            await _hub.Clients.All.SendAsync("temperatureUpdate", new
+            {
+                temperature = result.temperature,
+                humidity = result.humidity
+            });
+
+            await _hub.Clients.All.SendAsync("channelStatusUpdate", new
+            {
+                data.ports,
+                data.namees
+            });
+
+            await _hub.Clients.All.SendAsync("satelliteMonitoringUpdate", mod?.satelliteview);
+
             return View(mod);
         }
         catch (Exception exp)

@@ -5,14 +5,12 @@ namespace Common.Domain.Services;
 
 public class NatiaHealthCheck : INatiaHealthCheck
 {
-    private readonly HttpClient _client;
     private readonly ILogger<NatiaHealthCheck> _logger;
 
-    private const string BaseUrl = "http://192.168.1.102:3999/api/Controll/checkrobot";
+    private const string BaseUrl = "https://192.168.1.102:3999/api/Controll/checkrobot";
 
-    public NatiaHealthCheck(HttpClient client, ILogger<NatiaHealthCheck> logger)
+    public NatiaHealthCheck(ILogger<NatiaHealthCheck> logger)
     {
-        _client = client;
         _logger = logger;
     }
 
@@ -22,7 +20,13 @@ public class NatiaHealthCheck : INatiaHealthCheck
         {
             _logger.LogInformation("Initiating health check for Natia robot at {Url}", BaseUrl);
 
-            var response = await _client.GetAsync(BaseUrl);
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true
+            };
+            var client = new HttpClient(handler);
+
+            var response = await client.GetAsync(BaseUrl);
 
             if (response.IsSuccessStatusCode)
             {
