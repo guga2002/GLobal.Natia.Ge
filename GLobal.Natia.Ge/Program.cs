@@ -10,6 +10,7 @@ using Common.Domain.Services;
 using Common.Domain.SignalR;
 using Common.Persistance.Interface;
 using Common.Persistance.Services;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
@@ -112,7 +113,12 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
+
+
+
 app.MapControllers();
 app.UseStaticFiles();
 app.UseRouting();
@@ -122,5 +128,12 @@ app.MapDefaultControllerRoute();
 app.MapControllerRoute(
     name: "default",
    pattern: "{controller=Unite}/{action=Index}");
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Global TV API V1");
+    c.RoutePrefix = string.Empty;
+});
 
 app.Run();
