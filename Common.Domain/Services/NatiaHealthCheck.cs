@@ -8,7 +8,7 @@ public class NatiaHealthCheck : INatiaHealthCheck
     private readonly HttpClient _client;
     private readonly ILogger<NatiaHealthCheck> _logger;
 
-    private const string BaseUrl = "http://192.168.1.102:3999/api/Controll/checkrobot";
+    private const string BaseUrl = "https://192.168.1.102:3999/api/Controll/checkrobot";
 
     public NatiaHealthCheck(HttpClient client, ILogger<NatiaHealthCheck> logger)
     {
