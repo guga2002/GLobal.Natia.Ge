@@ -17,14 +17,11 @@ public class AudioStreamerController : ControllerBase
     }
 
     [HttpPost("push")]
-    public async Task<IActionResult> PushAudio([FromBody] byte[] wavBytes)
+    public async Task<IActionResult> PushAudio([FromBody] string base64Wav)
     {
-        if (wavBytes == null || wavBytes.Length < 100)
-            return BadRequest("Invalid audio stream");
+        var audioBytes = Convert.FromBase64String(base64Wav);
 
-        var base64Audio = Convert.ToBase64String(wavBytes);
-
-        await _hub.Clients.All.SendAsync("robotAudioStream", base64Audio);
+        await _hub.Clients.All.SendAsync("robotAudioStream", audioBytes);
 
         return Ok("Audio pushed to clients.");
     }

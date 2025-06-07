@@ -13,7 +13,7 @@ public class RegionInfo
 
         using (var res = new HttpClient(handler))
         {
-            var getres = await res.GetAsync("https://192.168.1.102:7063/api/RegionChecker");
+            var getres = await res.GetAsync("https://192.168.1.102:3999/api/RegionData");
 
             if (getres.IsSuccessStatusCode)
             {
