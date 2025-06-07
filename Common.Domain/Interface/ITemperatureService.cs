@@ -1,6 +1,8 @@
-﻿namespace Common.Domain.Interface;
+﻿using Common.Domain.Models;
+
+namespace Common.Domain.Interface;
 
 public interface ITemperatureService
 {
-    Task<(string, string)> GetCUrrentTemperature();
+    Task<TemperatureModel> GetCUrrentTemperature();
 }

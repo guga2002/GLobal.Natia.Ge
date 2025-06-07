@@ -1,44 +1,48 @@
-﻿using System.Net.Mail;
-using System.Net;
+﻿using System.Text;
+using System.Text.Json;
 
 namespace Common.Persistance.Extensions;
 
 public static class SendExceptiontoGuga
 {
-    private const string SmtpServer = "smtp.gmail.com";
-    private const int SmtpPort = 587;
-    private const string SenderEmail = "globaltvmanagment@gmail.com";
-    private const string SenderPassword = "reoiuyqgeipepngo";
+
+    private static readonly HttpClient _client = new HttpClient(new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = (msg, cert, chain, err) => true
+    });
+
+    private static DateTime _lastSent = DateTime.MinValue;
 
     public static void InformGuga(this Exception exp)
     {
+        if ((DateTime.UtcNow - _lastSent).TotalSeconds < 60) return;
+        _lastSent = DateTime.UtcNow;
+
         Task.Run(() => SendMessage(BuildHtmlMessage(exp.Message, exp?.StackTrace ?? "")));
     }
-
 
     public static async Task SendMessage(string message)
     {
         try
         {
-            using var smtpClient = new SmtpClient(SmtpServer)
+            var link = $"https://192.168.100.104:2000/api/Temprature/SendEmail?message={Uri.EscapeDataString(message)}";
+
+            var json = JsonSerializer.Serialize(new List<string>
             {
-                Port = SmtpPort,
-                Credentials = new NetworkCredential(SenderEmail, SenderPassword),
-                EnableSsl = true
-            };
+                "aapkhazava22@gmail.com"
+            });
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _client.PostAsync(link, content);
 
-            var mailMessage = new MailMessage
+            if (response.IsSuccessStatusCode)
             {
-                From = new MailAddress(SenderEmail),
-                Subject = $"საიტი გაითშა გუგა: {DateTime.Now}",
-                Body = message,
-                IsBodyHtml = true
-            };
-
-            mailMessage.To.Add("aapkhazava22@gmail.com");
-
-            await smtpClient.SendMailAsync(mailMessage);
-            Console.WriteLine("Message sent successfully to Guga.");
+                Console.WriteLine("✅ Email sent successfully.");
+            }
+            else
+            {
+                Console.WriteLine($"❌ Failed to send email. Status: {response.StatusCode}");
+                Console.WriteLine(await response.Content.ReadAsStringAsync());
+            }
         }
         catch (Exception ex)
         {

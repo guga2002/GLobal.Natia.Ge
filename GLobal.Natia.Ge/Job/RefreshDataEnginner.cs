@@ -93,15 +93,15 @@ public class RefreshDataEnginner : BackgroundService
                         d.HaveError = ports.Contains(d.PortIn250);
                 }
 
-                if (_lastTemperature != temp.Item1 || _lastHumidity != temp.Item2)
+                if (_lastTemperature != temp.temperature || _lastHumidity != temp.humidity)
                 {
-                    _lastTemperature = temp.Item1;
-                    _lastHumidity = temp.Item2;
+                    _lastTemperature = temp.temperature;
+                    _lastHumidity = temp.humidity;
 
                     await _hub.Clients.All.SendAsync("temperatureUpdate", new
                     {
-                        temperature = temp.Item1,
-                        humidity = temp.Item2
+                        temperature = temp.temperature,
+                        humidity = temp.humidity
                     }, stoppingToken);
                     _logger.LogInformation("🌡 Temperature/humidity update pushed.");
                 }

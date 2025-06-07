@@ -1,25 +1,37 @@
-﻿using Common.Domain.Interface;
+﻿using System.Text.Json;
+using Common.Domain.Interface;
+using Common.Domain.Models;
 
 namespace Common.Domain.Services;
 
 public class TemperatureService : ITemperatureService
 {
-    private static readonly HttpClient client = new HttpClient();
-    private const string serverUrl = "http://192.168.100.104:8080";
-    public async Task<(string, string)> GetCUrrentTemperature()
+    private const string serverUrl = "https://192.168.100.104:2000";
+    public async Task<TemperatureModel> GetCUrrentTemperature()
     {
         try
         {
-            var response = await client.GetAsync($"{serverUrl}/monitoring");
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true
+            };
+            var client = new HttpClient(handler);
+
+            var response = await client.GetAsync($"{serverUrl}/api/Temprature/GetCurrentTemperature");
             response.EnsureSuccessStatusCode();
             var responseData = await response.Content.ReadAsStringAsync();
-            var res = responseData.Split(new string[] { "<div id=\"temperature\" class=\"temperature\">", "°C</div>" }, StringSplitOptions.None)[1];
-            var Humidity = responseData.Split(new string[] { "<div class=\"humidity\">", "%</div>" }, StringSplitOptions.None)[1];
-            return (res, Humidity);
+
+            var res=JsonSerializer.Deserialize<TemperatureModel>(responseData);
+            if (res == null)
+            {
+                return new TemperatureModel { humidity = "N/A", temperature = "N/A" };
+            }
+            return res;
         }
         catch (Exception ex)
         {
-            return ("შეცდომა დემპერატურის წამოღებისას", "");
+            // Log the exception (ex) as needed
+            return new TemperatureModel { humidity = "N/A", temperature = "N/A" };
         }
     }
 }

@@ -92,8 +92,8 @@ public class UniteController : Controller
             };
             mod.chyanellnameandalarm = data;
             var result = await temperature.GetCUrrentTemperature();
-            mod.temperature = result.Item1;
-            mod.Humidity = result.Item2;
+            mod.temperature = result.temperature;
+            mod.Humidity = result.humidity;
             return View(mod);
         }
         catch (Exception exp)
