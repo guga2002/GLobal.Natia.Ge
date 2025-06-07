@@ -5,7 +5,7 @@ using Common.Persistance.Extensions;
 using Common.Persistance.Interface;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GlobalManagment.Controllers;
+namespace GLobal.Natia.Ge.Controllers;
 
 public class UniteController : Controller
 {
@@ -100,6 +100,6 @@ public class UniteController : Controller
         {
             exp.InformGuga();
             return View(new UniteModel());
-        }       
+        }
     }
 }

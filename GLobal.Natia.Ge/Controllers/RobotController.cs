@@ -1,9 +1,9 @@
-﻿using Common.Domain.SignalR;
-using Common.Persistance.Interface;
+﻿using Common.Domain.Interface;
+using Common.Domain.SignalR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
-namespace GlobalManagment.Controllers;
+namespace GLobal.Natia.Ge.Controllers;
 
 [ApiController]
 [Route("[controller]")]
@@ -25,7 +25,7 @@ public class RobotController : ControllerBase
         var currentMessage = Task.Run(() => _redisService.GetAsync<string>(_sharedMessage))
                                   .GetAwaiter().GetResult() ?? "";
 
-        if (currentMessage == _sharedMessage|| string.IsNullOrEmpty(currentMessage))
+        if (currentMessage == _sharedMessage || string.IsNullOrEmpty(currentMessage))
         {
             Task.Run(() => _redisService.SetAsync(_sharedMessage, "Empty", TimeSpan.FromMinutes(5)))
                 .GetAwaiter().GetResult();
@@ -56,8 +56,8 @@ public class RobotController : ControllerBase
     [HttpGet]
     public async Task<string?> GetNow()
     {
-        var res=await _redisService.GetAsync<string>(_sharedMessage);
-        if(!string.IsNullOrEmpty(res))
+        var res = await _redisService.GetAsync<string>(_sharedMessage);
+        if (!string.IsNullOrEmpty(res))
         {
             await _redisService.DeleteAsync(_sharedMessage);
         }

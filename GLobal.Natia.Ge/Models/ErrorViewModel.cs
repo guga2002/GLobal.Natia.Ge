@@ -1,4 +1,4 @@
-namespace GlobalTv.Natia.ge.Models
+namespace GLobal.Natia.Ge.Models
 {
     public class ErrorViewModel
     {

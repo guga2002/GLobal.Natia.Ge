@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace GlobalTv.Natia.ge.Controllers;
+namespace GLobal.Natia.Ge.Controllers;
 
 public class HomeController : Controller
 {

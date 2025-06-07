@@ -1,4 +1,4 @@
-﻿namespace Common.Persistance.Interface;
+﻿namespace Common.Domain.Interface;
 
 public interface IRedisService
 {

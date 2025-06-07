@@ -1,7 +1,10 @@
+using System.Net;
 using Common.Data.Data;
 using Common.Data.Interfaces;
 using Common.Data.Repositories;
+using Common.Domain.Helpers;
 using Common.Domain.Interface;
+using Common.Domain.Jobs;
 using Common.Domain.Mapper;
 using Common.Domain.Services;
 using Common.Domain.SignalR;
@@ -21,6 +24,10 @@ builder.Services.AddControllers();
 builder.WebHost.UseKestrel(options =>
 {
     options.ListenAnyIP(3395);
+    options.Listen(IPAddress.Any, 3999, listenOptions =>
+    {
+        listenOptions.UseHttps();
+    });
 });
 
 
@@ -72,6 +79,26 @@ builder.Services.AddScoped<IsourceServices, SourceService>();
 builder.Services.AddScoped<ITemperatureService, TemperatureService>();
 
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+
+builder.Services.AddScoped<INatiaHealthCheck, NatiaHealthCheck>();
+
+builder.Services.AddScoped<IRegionsServices, RegionsServices>();
+
+builder.Services.AddScoped<IGetEmrDataServices, GetEmrDataServices>();
+
+builder.Services.AddScoped<RegionChecker>();
+
+
+builder.Services.AddHostedService<VirtualEnginner>();
+
+builder.Services.AddScoped<IEmrServices, EmrProvideService>();
+
+
+builder.Services.AddScoped<IBackupService, BackupService>();
+
+builder.Services.AddControllers();
+
+builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddCors(options =>
 {

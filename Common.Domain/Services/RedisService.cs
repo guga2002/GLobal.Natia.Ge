@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
-using Common.Persistance.Interface;
+using Common.Domain.Interface;
 using StackExchange.Redis;
 
-namespace Common.Persistance.Services;
+namespace Common.Domain.Services;
 
 public class RedisService : IRedisService
 {
