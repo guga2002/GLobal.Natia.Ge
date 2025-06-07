@@ -362,7 +362,7 @@
 
             image.src = "http://192.168.1.102:8080/NatiaResource/Robot.gif";
 
-            const duration = Math.max(message.length * 350, 1500);
+            const duration = Math.max(message.length * 2, message.length* 3);
             setTimeout(() => {
                 image.src = "";
                 text.innerHTML = '<div class="right-curtain"></div>';
