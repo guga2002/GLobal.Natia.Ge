@@ -68,7 +68,7 @@ namespace GLobal.Natia.Ge.Controllers.Api
 
                 var difference = currentList.Except(previousList).Union(previousList.Except(currentList)).ToList();
 
-                if (difference.Count > 1 || timeSinceLast.TotalMinutes > 5)
+                if (difference.Count > 1)
                 {
                     await redisService.SetAsync("LastPortCodes:Natia", currentCsv);
                     await redisService.SetAsync("LastPortAnnounce:Natia", DateTime.UtcNow.Ticks);

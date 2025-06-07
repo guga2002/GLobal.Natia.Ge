@@ -80,7 +80,7 @@
         function refreshPage() {
             location.reload();
         }
-        setTimeout(refreshPage, 2 * 60 * 60 * 1000);
+        setInterval(refreshPage, 4 * 60 * 60 * 1000);
     </script>
 
     <div style="z-index:900;position:absolute; margin-left:40%;margin-top:25%">
@@ -95,17 +95,17 @@
     <div class="container">
         @try
         {
-            @if (double.Parse(Model?.temperature) < 23)
+            @if (double.Parse(Model?.temperature??"0", System.Globalization.CultureInfo.InvariantCulture) < 23)
             {
-                <button align="center" type="submit" id="buttonTemp" class="text-box-btn">სადგურში მიმდინარე ტემპერატურაა: @Model.temperature °C / ტენიანობა: @Model.Humidity %</button>
+                <button align="center" type="submit" id="buttonTemp" class="text-box-btn">სადგურში მიმდინარე ტემპერატურაა: @Model?.temperature °C / ტენიანობა: @Model?.Humidity %</button>
             }
-            else if (double.Parse(Model.temperature) >= 23 && double.Parse(Model.temperature) < 25)
+            else if (double.Parse(Model?.temperature ?? "0", System.Globalization.CultureInfo.InvariantCulture) >= 23 && double.Parse(Model?.temperature??"0", System.Globalization.CultureInfo.InvariantCulture) < 25)
             {
-                <button align="center" type="submit" id="buttonTemp" class="text-box-btn-orange">სადგურში მიმდინარე ტემპერატურაა: @Model.temperature °C / ტენიანობა: @Model.Humidity %  შეამოწმე !</button>
+                <button align="center" type="submit" id="buttonTemp" class="text-box-btn-orange">სადგურში მიმდინარე ტემპერატურაა: @Model?.temperature °C / ტენიანობა: @Model?.Humidity %  შეამოწმე !</button>
             }
             else
             {
-                <button align="center" type="submit" id="buttonTemp" class="text-box-btn-red">სადგურში მიმდინარე ტემპერატურაა: @Model.temperature °C / ტენიანობა: @Model.Humidity % სასწრაფოდ გადაამოწმე !   !    !   !    !    !    !   !</button>
+                <button align="center" type="submit" id="buttonTemp" class="text-box-btn-red">სადგურში მიმდინარე ტემპერატურაა: @Model?.temperature °C / ტენიანობა: @Model?.Humidity % სასწრაფოდ გადაამოწმე !   !    !   !    !    !    !   !</button>
             }
         }
         catch (Exception)
@@ -362,7 +362,7 @@
 
             image.src = "http://192.168.1.102:8080/NatiaResource/Robot.gif";
 
-            const duration = Math.max(message.length * 100, message.length* 170);
+            const duration = message.length * 40;
             setTimeout(() => {
                 image.src = "";
                 text.innerHTML = '<div class="right-curtain"></div>';
