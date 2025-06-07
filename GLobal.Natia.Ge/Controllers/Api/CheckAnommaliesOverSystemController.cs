@@ -17,7 +17,7 @@ public class CheckAnommaliesOverSystemController : ControllerBase
         _redis = redis;
     }
 
-    [HttpGet("annomalie")]
+    [HttpGet("CheckForAnomalies")]
     public async Task<IActionResult> Check()
     {
         var anomalyMessage = await _redis.GetAsync<string>(AnomalyKey);
