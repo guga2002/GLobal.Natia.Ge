@@ -31,23 +31,23 @@ namespace GlobalManagment.Controllers
         [AllowAnonymous]
         public async Task<string> CheckRobotHealth()
         {
-            string processName = "Natia.UI";
+            //string processName = "Natia.UI";
 
-            bool isRunning = Process.GetProcessesByName(processName).Any();
+            //bool isRunning = Process.GetProcessesByName(processName).Any();
 
-            if (!isRunning)
-            {
-                string exePath = @"C:\Users\Administrator\source\repos\Natia.UI\Natia.UI\bin\Release\net8.0\publish\Natia.UI.exe";
-                StartProcess(exePath);
-            }
+            //if (!isRunning)
+            //{
+            //    string exePath = @"C:\Users\MONITORING PC\source\repos\Natia.UI\Natia.UI\bin\Release\net8.0\publish\Natia.UI.exe";
+            //    StartProcess(exePath);
+            //}
 
-            var date = DateTime.UtcNow;
-            var dateRobot = await HeartBeat(false);
+            //var date = DateTime.UtcNow;
+            //var dateRobot = await HeartBeat(false);
 
-            if ((date - dateRobot).TotalMinutes > 4)
-            {
-                return await Reload();
-            }
+            //if ((date - dateRobot).TotalMinutes > 4)
+            //{
+            //    return await Reload();
+            //}
             return "Robot is healthy";
         }
 
@@ -56,12 +56,12 @@ namespace GlobalManagment.Controllers
         [AllowAnonymous]
         public async Task<string> Reload()
         {
-            string exePath = @"C:\Users\Administrator\source\repos\Natia.UI\Natia.UI\bin\Release\net8.0\publish\Natia.UI.exe";
-            string processName = "Natia.UI";
+            //string exePath = @"C:\Users\MONITORING PC\source\repos\Natia.UI\Natia.UI\bin\Release\net8.0\publish\Natia.UI.exe";
+            //string processName = "Natia.UI";
 
-            StopProcess(processName);
-            await Task.Delay(2000);
-            StartProcess(exePath);
+            //StopProcess(processName);
+            //await Task.Delay(2000);
+            //StartProcess(exePath);
 
             return "Successfully Reloaded";
         }
