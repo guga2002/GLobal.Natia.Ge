@@ -196,6 +196,27 @@
             .configureLogging(signalR.LogLevel.Information)
             .build();
 
+         connection.on("robotAudioStream", function (base64Audio) {
+            try {
+                const binary = atob(base64Audio);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
+
+                const blob = new Blob([bytes], { type: 'audio/wav' });
+                const url = URL.createObjectURL(blob);
+
+                const audio = new Audio(url);
+                audio.play().catch(err => {
+                    console.error("❌ Failed to play streamed audio:", err);
+                });
+            } catch (err) {
+                console.error("⚠️ Error decoding audio stream:", err);
+            }
+        });
+
+
         let lastTemp = "", lastHum = "";
 
         connection.on("temperatureUpdate", function (data) {
