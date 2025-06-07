@@ -1,0 +1,336 @@
+﻿@using Common.Domain.Models
+@using Common.Domain.Models.ViewModels
+@model UniteModel
+@{
+    Layout = null;
+    var rand = DateTime.Now;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    @if (rand.Hour >= 22 || rand.Hour <= 10)
+    {
+        <link rel="stylesheet" href="http://192.168.1.102:8080/NatiaResource/Dark.css" />
+    }
+    else if (rand.Month == 12 || rand.Month == 1)
+    {
+        <link rel="stylesheet" href="http://192.168.1.102:8080/NatiaResource/Zamtari.css" />
+    }
+    else
+    {
+        <link rel="stylesheet" href="http://192.168.1.102:8080/NatiaResource/Site.css" />
+    }
+
+    <style>
+        #robot-text {
+            margin-top: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+            text-align: center;
+            padding: 28px;
+            border-radius: 75px;
+            background: linear-gradient(to bottom, #4b0082 30%, #000 100%);
+            box-shadow: 0px 20px 30px rgba(0, 0, 0, 0.8);
+            position: relative;
+            opacity: 0.8;
+        }
+
+            #robot-text::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 20px;
+                background: linear-gradient(to bottom, #000, #333);
+                box-shadow: 0px -5px 10px rgba(0, 0, 0, 0.6);
+            }
+
+            #robot-text .right-curtain {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 100%;
+                height: 100%;
+                background: radial-gradient(circle, rgba(255, 0, 0, 0.9) 20%, rgba(139, 0, 0, 1) 70%);
+                clip-path: polygon(80% 0, 100% 0, 100% 100%, 90% 100%);
+            }
+
+            #robot-text .spotlight {
+                position: absolute;
+                top: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 150px;
+                height: 200%;
+                background: radial-gradient(circle, rgba(255, 255, 0, 0.4) 0%, rgba(255, 255, 0, 0.1) 70%, transparent 100%);
+                animation: spotlightMove 3s infinite alternate ease-in-out;
+            }
+    </style>
+</head>
+
+<body>
+
+    <script>
+        function refreshPage() {
+            location.reload();
+        }
+        setTimeout(refreshPage, 2 * 60 * 60 * 1000);
+    </script>
+
+    <div style="z-index:900;position:absolute; margin-left:40%;margin-top:25%">
+        <div id="robot-container" style="display:none">
+            <img id="robot-image" src="http://192.168.1.102:8080/NatiaResource/Robot.gif" />
+            <div id="robot-text">
+                <div class="right-curtain"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        @try
+        {
+            @if (double.Parse(Model?.temperature) < 23)
+            {
+                <button align="center" type="submit" id="buttonTemp" class="text-box-btn">სადგურში მიმდინარე ტემპერატურაა: @Model.temperature °C / ტენიანობა: @Model.Humidity %</button>
+            }
+            else if (double.Parse(Model.temperature) >= 23 && double.Parse(Model.temperature) < 25)
+            {
+                <button align="center" type="submit" id="buttonTemp" class="text-box-btn-orange">სადგურში მიმდინარე ტემპერატურაა: @Model.temperature °C / ტენიანობა: @Model.Humidity %  შეამოწმე !</button>
+            }
+            else
+            {
+                <button align="center" type="submit" id="buttonTemp" class="text-box-btn-red">სადგურში მიმდინარე ტემპერატურაა: @Model.temperature °C / ტენიანობა: @Model.Humidity % სასწრაფოდ გადაამოწმე !   !    !   !    !    !    !   !</button>
+            }
+        }
+        catch (Exception)
+        {
+            <button align="center" type="submit" id="buttonTemp" class="text-box-btn-red">შეცდომა ტემპერატურის წამოღების დროს, დაუკავშირდი დეველოპმენტის ჯგუფს !  ! !</button>
+        }
+
+        <div class="button-group" style="z-index:1">
+            @{
+                int i = 0;
+                int j = 0;
+            }
+
+            @foreach (var item in Model?.chyanellnameandalarm?.namees ?? new Dictionary<int, string>())
+            {
+                var buttonColorss = "green";
+                if (j < Model?.chyanellnameandalarm?.ports?.Count)
+                {
+                    if (i >= 92)
+                    {
+                        if (Model.chyanellnameandalarm.ports[j] == i + 2)
+                        {
+                            buttonColorss = "red";
+                            j++;
+                        }
+                    }
+                    else if (Model.chyanellnameandalarm.ports[j] == i + 1)
+                    {
+                        buttonColorss = "red";
+                        j++;
+                    }
+                }
+                if (item.Value.Equals("Test"))
+                {
+                    buttonColorss = "yellow";
+                }
+                <form method="post"  asp-route-buttonId="@item.Value">
+                    <button type="submit" id="button@(item.Key)" class="btn btn-primary button @(buttonColorss)">@item.Key. @item.Value</button>
+                </form>
+                i++;
+            }
+        </div>
+
+        @{
+            string cvlad = "green";
+        }
+
+        <div class="containera">
+            @foreach (var monitoring in Model?.satelliteview ?? new List<SatteliteViewMonitoring>())
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">@monitoring.Degree </h4>
+                        <div class="btn-group" role="group" aria-label="Frequency Buttons">
+                            @foreach (var detail in monitoring?.details ?? new List<SatteliteFrequencyModel>())
+                            {
+                                if (detail.HaveError)
+                                {
+                                    cvlad = "red";
+                                }
+                                else
+                                {
+                                    cvlad = "green";
+                                }
+                                var buttonId = $"{detail.Frequency}_{detail.Polarisation}_{detail.SymbolRate}";
+                                <form method="get" asp-action="#" asp-controller="#" class="Gaakete">
+                                    <input type="hidden" class="PortIn" name="frequency" value="@detail.PortIn250" />
+                                    <button type="submit" id="@buttonId" class="btn btn-primary button @cvlad buttonIko">
+                                        @($"{detail.Frequency} {detail.Polarisation} {detail.SymbolRate}")
+                                        <span style="color: black; font-size: 20px;font-weight:bolder;margin-left:3px;">@detail.mer</span>
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/uniteHub")
+            .withAutomaticReconnect()
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+
+        let lastTemp = "", lastHum = "";
+
+        connection.on("temperatureUpdate", function (data) {
+            const temp = parseFloat(data.temperature || "0");
+            const hum = parseFloat(data.humidity || "0");
+            if (lastTemp === data.temperature && lastHum === data.humidity) return;
+
+            lastTemp = data.temperature;
+            lastHum = data.humidity;
+
+            const btn = $('#buttonTemp');
+            if (btn.length) {
+                const tempClass = temp < 23 ? 'text-box-btn' : temp < 25 ? 'text-box-btn-orange' : 'text-box-btn-red';
+                btn.attr('class', tempClass);
+                btn.text(`სადგურში მიმდინარე ტემპერატურაა: ${temp.toFixed(1)} °C / ტენიანობა: ${hum.toFixed(1)} %`);
+            }
+        });
+
+        connection.on("channelStatusUpdate", function ({ ports, names }) {
+            const group = $('.button-group');
+            group.empty();
+
+            for (const key in names) {
+                let color = "green";
+                const id = parseInt(key);
+
+                if (id >= 92 && ports.includes(id + 1)) color = "red";
+                else if (id<92 && ports.includes(id)) color = "red";
+                if (names[key] === "Test") color = "yellow";
+
+                const html = `
+                    <form method="post">
+                        <button type="submit" id="button${id}" class="btn btn-primary button ${color}">
+                            ${key}. ${names[key]}
+                        </button>
+                    </form>`;
+                group.append(html);
+            }
+        });
+
+        connection.on("satelliteMonitoringUpdate", function (satellites) {
+            const satContainer = $('.containera');
+            satContainer.empty();
+
+            satellites.forEach(sat => {
+                const degree = (sat.degree ?? "No Title").trim();
+                if (!sat.details || sat.details.length === 0) return;
+
+                const card = $(`
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">${degree}</h4>
+                            <div class="btn-group" role="group"></div>
+                        </div>
+                    </div>
+                `);
+
+                const freqGroup = card.find('.btn-group');
+
+                sat.details.forEach(detail => {
+                    const btnColor = detail.haveError ? 'red' : 'green';
+                    const frequency = detail.frequency?.trim() || "--";
+                    const symbolRate = detail.symbolRate?.trim() || "--";
+                    const polarisation = (detail.polarisation && detail.polarisation !== '-' ? detail.polarisation : "-");
+
+                    let mer = "";
+                    if (detail.mer) {
+                        const match = detail.mer.match(/[\d.]+/);
+                        if (match) {
+                            mer = `${parseFloat(match[0]).toFixed(1)} dB`;
+                        }
+                    }
+
+                    const html = `
+                        <form method="get" action="#">
+                            <input type="hidden" name="frequency" value="${detail.portIn250}" />
+                            <button type="submit" class="btn btn-primary button ${btnColor}">
+                                ${frequency} ${polarisation} ${symbolRate}
+                                <span style="color: black; font-size: 20px; font-weight: bold; margin-left: 3px;">${mer}</span>
+                            </button>
+                        </form>`;
+                    freqGroup.append(html);
+                });
+
+                satContainer.append(card);
+            });
+        });
+
+        connection.on("robotsay", function (message) {
+            const container = document.getElementById("robot-container");
+            const image = document.getElementById("robot-image");
+            const text = document.getElementById("robot-text");
+
+            if (!container || !image || !text) {
+                console.warn("⚠️ Robot UI elements are missing.");
+                return;
+            }
+
+            if (message !== "Empty") {
+                container.style.display = "block";
+                text.innerHTML = "";
+
+                const spotlight = document.createElement("div");
+                spotlight.className = "spotlight";
+                text.appendChild(spotlight);
+
+                const textNode = document.createElement("div");
+                textNode.innerText = message;
+                text.appendChild(textNode);
+
+                image.src = "http://192.168.1.102:8080/NatiaResource/Robot.gif";
+
+                const duration = Math.max(message.length * 200, 1000);
+                setTimeout(() => {
+                    image.src = "";
+                    text.innerHTML = '<div class="right-curtain"></div>';
+                    container.style.display = "none";
+                }, duration);
+            } else {
+                container.style.display = "none";
+            }
+        });
+
+        connection.start()
+            .then(() => {
+                console.log("✅ SignalR connected to /uniteHub");
+            })
+            .catch(err => {
+                console.error("❌ SignalR connection error:", err.toString());
+            });
+
+        connection.onclose(err => {
+            console.warn("⚠️ SignalR disconnected", err);
+        });
+
+    </script>
+</body>
+</html>
