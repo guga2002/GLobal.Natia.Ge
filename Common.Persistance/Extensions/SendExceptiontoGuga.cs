@@ -25,7 +25,7 @@ public static class SendExceptiontoGuga
     {
         try
         {
-            var link = $"https://192.168.100.104:2000/api/Temprature/SendEmail?message={Uri.EscapeDataString(message)}";
+            var link = $"https://192.168.0.79:2000/api/Temprature/SendEmail?message={Uri.EscapeDataString(message)}";
 
             var json = JsonSerializer.Serialize(new List<string>
             {

@@ -6,7 +6,7 @@ namespace Common.Domain.Services;
 
 public class TemperatureService : ITemperatureService
 {
-    private const string serverUrl = "https://192.168.100.104:2000";
+    private const string serverUrl = "https://192.168.0.79:2000";
     public async Task<TemperatureModel> GetCUrrentTemperature()
     {
         try
@@ -30,7 +30,6 @@ public class TemperatureService : ITemperatureService
         }
         catch (Exception ex)
         {
-            // Log the exception (ex) as needed
             return new TemperatureModel { humidity = "N/A", temperature = "N/A" };
         }
     }
