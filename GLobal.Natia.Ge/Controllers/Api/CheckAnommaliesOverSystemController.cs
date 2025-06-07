@@ -8,45 +8,30 @@ namespace GLobal.Natia.Ge.Controllers.Api;
 public class CheckAnommaliesOverSystemController : ControllerBase
 {
     private readonly IRedisService _redis;
-    private static readonly object _anomalyLock = new();
-    private static DateTime _lastUpdate = DateTime.MinValue;
 
     private const string AnomalyKey = "Annomalies";
+    private const string LastShownKey = "Annomalies:LastShown";
 
     public CheckAnommaliesOverSystemController(IRedisService redis)
     {
         _redis = redis;
     }
 
-    [HttpGet("CheckForAnomalies")]
+    [HttpGet("annomalie")]
     public async Task<IActionResult> Check()
     {
-        var now = DateTime.Now;
+        var anomalyMessage = await _redis.GetAsync<string>(AnomalyKey);
+        if (string.IsNullOrEmpty(anomalyMessage))
+            return NoContent();
 
-        if (ShouldCheck(ref _lastUpdate, now, seconds: 30, _anomalyLock))
-        {
-            var anomalyMessage = await _redis.GetAsync<string>(AnomalyKey);
+        var lastShown = await _redis.GetAsync<DateTime?>(LastShownKey);
+        var now = DateTime.UtcNow;
 
-            if (!string.IsNullOrEmpty(anomalyMessage))
-            {
-                return Ok(anomalyMessage);
-            }
-        }
+        if (lastShown.HasValue && now - lastShown.Value < TimeSpan.FromMinutes(10))
+            return NoContent();
 
-        return NoContent();
-    }
-
-    private static bool ShouldCheck(ref DateTime lastCheck, DateTime now, int seconds, object lockObj)
-    {
-        lock (lockObj)
-        {
-            if ((now - lastCheck).TotalSeconds > seconds)
-            {
-                lastCheck = now;
-                return true;
-            }
-        }
-
-        return false;
+        await _redis.SetAsync(LastShownKey, now, TimeSpan.FromHours(1));
+        await _redis.DeleteAsync(AnomalyKey);
+        return Ok(anomalyMessage);
     }
 }
