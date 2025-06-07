@@ -38,24 +38,35 @@ builder.Services.AddDbContext<GlobalTvDb>(opt =>
 builder.Services.AddHttpClient();
 
 builder.Services.AddSignalR();
+
 builder.Services.AddHostedService<RefreshDataEnginner>();
 
 builder.Services.AddScoped<IChanellRepository, ChanellRepository>();
+
 builder.Services.AddScoped<IDesclamlerCard, DesclamlerCardRepository>();
+
 builder.Services.AddScoped<IDesclambler, DesclamblerRepository>();
+
 builder.Services.AddScoped<IEmr60Info, Emr60InfoRepository>();
+
 builder.Services.AddScoped<ISourceRepository, SourceRepository>();
+
 builder.Services.AddScoped<ITranscoderRepository, TranscoderReporitory>();
+
 builder.Services.AddScoped<IUniteOfWork, UniteOfWork>();
 
-
 builder.Services.AddScoped<IAllInOneService, AllInOneService>();
+
 builder.Services.AddScoped<ITranscoderService, TranscoderServices>();
+
 builder.Services.AddScoped<ISatteliteFrequencyService, SatteliteFrequencyService>();
+
 builder.Services.AddScoped<ISatteliteFrequency, SatteliteFrequencyRepository>();
+
 builder.Services.AddScoped<IChanellServices, ChanellServices>();
 
 builder.Services.AddScoped<IService, EmrServices>();
+
 builder.Services.AddScoped<IsourceServices, SourceService>();
 
 builder.Services.AddScoped<ITemperatureService, TemperatureService>();
@@ -70,24 +81,17 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials()
-            .SetIsOriginAllowed(origin => true); // allow all origins
+            .SetIsOriginAllowed(origin => true);
     });
 });
 
-
 var app = builder.Build();
-
-
-
 app.MapControllers();
 app.UseStaticFiles();
 app.UseRouting();
-
 app.UseCors();
 app.MapHub<UniteMonitoringHub>("/uniteHub");
-
 app.MapDefaultControllerRoute();
-
 app.MapControllerRoute(
     name: "default",
    pattern: "{controller=Unite}/{action=Index}");
