@@ -183,6 +183,7 @@
                     </div>
                 </div>
             }
+            <audio id="robot-audio" style="display: none;"></audio>
         </div>
     </div>
 
@@ -196,25 +197,42 @@
             .configureLogging(signalR.LogLevel.Information)
             .build();
 
-         connection.on("robotAudioStream", function (base64Audio) {
-            try {
-                const binary = atob(base64Audio);
-                const bytes = new Uint8Array(binary.length);
-                for (let i = 0; i < binary.length; i++) {
-                    bytes[i] = binary.charCodeAt(i);
-                }
+        const audioQueue = [];
+        let isPlaying = false;
+        const audioElement = document.getElementById("robot-audio");
 
-                const blob = new Blob([bytes], { type: 'audio/wav' });
-                const url = URL.createObjectURL(blob);
-
-                const audio = new Audio(url);
-                audio.play().catch(err => {
-                    console.error("❌ Failed to play streamed audio:", err);
-                });
-            } catch (err) {
-                console.error("⚠️ Error decoding audio stream:", err);
-            }
+        connection.on("robotAudioStream", function (base64Audio) {
+            audioQueue.push(base64Audio);
+            playNextAudio();
         });
+
+        function playNextAudio() {
+            if (isPlaying || audioQueue.length === 0) return;
+
+            const base64Audio = audioQueue.shift();
+            const binary = atob(base64Audio);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+
+            const blob = new Blob([bytes], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            audioElement.src = url;
+
+            isPlaying = true;
+
+            audioElement.play().then(() => {
+                audioElement.onended = () => {
+                    isPlaying = false;
+                    playNextAudio();
+                };
+            }).catch(err => {
+                console.error("❌ Failed to play streamed audio:", err);
+                isPlaying = false;
+                playNextAudio();
+            });
+        }
 
 
         let lastTemp = "", lastHum = "";
@@ -305,40 +323,54 @@
             });
         });
 
+        let robotMessageQueue = [];
+        let isRobotSpeaking = false;
+
         connection.on("robotsay", function (message) {
+            if (message !== "Empty") {
+                robotMessageQueue.push(message);
+                processRobotMessages();
+            }
+        });
+
+        function processRobotMessages() {
+            if (isRobotSpeaking || robotMessageQueue.length === 0) return;
+
+            isRobotSpeaking = true;
+            const message = robotMessageQueue.shift();
+
             const container = document.getElementById("robot-container");
             const image = document.getElementById("robot-image");
             const text = document.getElementById("robot-text");
 
             if (!container || !image || !text) {
                 console.warn("⚠️ Robot UI elements are missing.");
+                isRobotSpeaking = false;
                 return;
             }
 
-            if (message !== "Empty") {
-                container.style.display = "block";
-                text.innerHTML = "";
+            container.style.display = "block";
+            text.innerHTML = "";
 
-                const spotlight = document.createElement("div");
-                spotlight.className = "spotlight";
-                text.appendChild(spotlight);
+            const spotlight = document.createElement("div");
+            spotlight.className = "spotlight";
+            text.appendChild(spotlight);
 
-                const textNode = document.createElement("div");
-                textNode.innerText = message;
-                text.appendChild(textNode);
+            const textNode = document.createElement("div");
+            textNode.innerText = message;
+            text.appendChild(textNode);
 
-                image.src = "http://192.168.1.102:8080/NatiaResource/Robot.gif";
+            image.src = "http://192.168.1.102:8080/NatiaResource/Robot.gif";
 
-                const duration = Math.max(message.length * 200, 1000);
-                setTimeout(() => {
-                    image.src = "";
-                    text.innerHTML = '<div class="right-curtain"></div>';
-                    container.style.display = "none";
-                }, duration);
-            } else {
+            const duration = Math.max(message.length * 350, 1500);
+            setTimeout(() => {
+                image.src = "";
+                text.innerHTML = '<div class="right-curtain"></div>';
                 container.style.display = "none";
-            }
-        });
+                isRobotSpeaking = false;
+                processRobotMessages(); 
+            }, duration);
+        }
 
         connection.start()
             .then(() => {
