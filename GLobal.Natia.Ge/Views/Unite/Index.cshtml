@@ -142,7 +142,7 @@
                 {
                     buttonColorss = "yellow";
                 }
-                <form method="post" asp-route-buttonId="@item.Value" asp-action="#" asp-controller="#">
+                <form method="post" asp-route-buttonId="@item.Value" asp-action="Index" asp-controller="ImportantChanell">
                     <button type="submit" id="button@(item.Key)" class="btn btn-primary button @(buttonColorss)">@item.Key. @item.Value</button>
                 </form>
                 i++;
@@ -171,7 +171,7 @@
                                     cvlad = "green";
                                 }
                                 var buttonId = $"{detail.Frequency}_{detail.Polarisation}_{detail.SymbolRate}";
-                                <form method="get" asp-action="#" asp-controller="#" class="Gaakete">
+                                <form method="get" asp-action="Index" asp-controller="ImportantChanell" class="Gaakete">
                                     <input type="hidden" class="PortIn" name="frequency" value="@detail.PortIn250" />
                                     <button type="submit" id="@buttonId" class="btn btn-primary button @cvlad buttonIko">
                                         @($"{detail.Frequency} {detail.Polarisation} {detail.SymbolRate}")
@@ -266,7 +266,7 @@
                 if (names[key] === "Test") color = "yellow";
 
                 const html = `
-                    <form method="post">
+                            <form method="get" action="/ImportantChanell/Index">
                         <button type="submit" id="button${id}" class="btn btn-primary button ${color}">
                             ${key}. ${names[key]}
                         </button>
@@ -309,7 +309,7 @@
                     }
 
                     const html = `
-                        <form method="get" action="#">
+                                <form method="get" action="/ImportantChanell/Index">
                             <input type="hidden" class="PortIn" name="frequency" value="${detail.portIn250}" />
                             <button type="submit" class="btn btn-primary button ${btnColor} buttonIko">
                                 ${frequency} ${polarisation} ${symbolRate}

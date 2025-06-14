@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using Common.Domain.Interface;
 using Common.Persistance.Interface;
+using Common.Persistance.Services;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -24,11 +25,18 @@ public class NatiaCoreController : ControllerBase
     }
 
 
-    [HttpGet("GetCHanellNames")]
+    [HttpGet("GetChanellNames")]
     public async Task<IActionResult> GetChanellNames(string emr)
     {
        var res=await chanells.GetEmrChanells(emr);
         return Ok(res);
+    }
+
+    [HttpGet("GetProblematicChanells")]
+    public async Task<IActionResult> GetProblematicChanells(string emr)
+    {
+        var redis = await redisService.GetAsync<List<MulticastAnalysisResult>>("SystemStreamInfo");
+        return Ok(redis);
     }
 
     [HttpGet("natiaFeedback")]
@@ -102,12 +110,20 @@ public class NatiaCoreController : ControllerBase
     [SwaggerResponse(200, "Returns the anniversary message if today's date matches.")]
     [SwaggerResponse(204, "No anniversary message for today's date.")]
     [SwaggerResponse(500, "An error occurred while processing the request.")]
-    public ActionResult<string> GetAnniversaryDates()
+    public async Task<ActionResult<string>> GetAnniversaryDates()
     {
         try
         {
             _logger.LogInformation("GetAnniversaryDates checked.");
             var time = DateTime.Now;
+
+            var res = await redisService.GetAsync<List<string>>("letscheck");
+
+            if (res is not null && res.Count > 3)
+            {
+                var joined = string.Join(", ", res.Take(3));
+                return Ok(joined);
+            }
 
             var holidays = new Dictionary<(int, int), string>
             {
