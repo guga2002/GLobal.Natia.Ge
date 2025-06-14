@@ -71,19 +71,37 @@ public class RegionChecker
             _logger.LogInformation("Checking optic connection and alarm thresholds...");
 
             if (!await _ser.OpticIsOn("192.168.15.10")) lst.Add("1510");
+            if (!await _ser.OpticIsOn("192.168.15.20")) lst.Add("1510");
+            if (!await _ser.OpticIsOn("192.168.15.30")) lst.Add("1510");
+
             if (!await _ser.OpticIsOn("192.168.14.10")) lst.Add("1410");
+            if (!await _ser.OpticIsOn("192.168.14.20")) lst.Add("1410");
+
             if (!await _ser.OpticIsOn("192.168.25.10")) lst.Add("2510");
+            if (!await _ser.OpticIsOn("192.168.25.20")) lst.Add("2510");
+
             if (!await _ser.OpticIsOn("192.168.13.10")) lst.Add("1310");
+            if (!await _ser.OpticIsOn("192.168.13.20")) lst.Add("1310");
 
             var qutaisi = await _ser.GetCount("15.10");
-            var foti = await _ser.GetCount("14.10");
-            var telavi = await _ser.GetCount("25.10");
-            var gori = await _ser.GetCount("13.10");
+            var qutaisi2 = await _ser.GetCount("15.20");
+            var qutaisi3 = await _ser.GetCount("15.30");
 
-            if (qutaisi >= 2) lst.Add("333");
-            if (foti >= 2) lst.Add("444");
-            if (telavi >= 2) lst.Add("555");
-            if (gori >= 2) lst.Add("666");
+            var foti = await _ser.GetCount("14.10");
+            var foti1 = await _ser.GetCount("14.20");
+
+            var telavi = await _ser.GetCount("25.10");
+            var telavi2 = await _ser.GetCount("25.20");
+
+            var gori = await _ser.GetCount("13.10");
+            var gori1 = await _ser.GetCount("13.20");
+
+            if (qutaisi >= 2 || qutaisi2 >= 2 || qutaisi3 >= 2) lst.Add("333");
+            if (foti >= 2 || foti1 >= 2) lst.Add("444");
+
+            if (telavi >= 2 || telavi2 >= 2) lst.Add("555");
+
+            if (gori >= 2 || gori1 >= 2) lst.Add("666");
 
             if (lst.Any())
             {
@@ -101,11 +119,19 @@ public class RegionChecker
     {
         List<int> regions = new List<int>();
         var regionIps = new Dictionary<string, int>
-        {
+        { 
             { "192.168.14.10", 370 },
-            { "192.168.25.10", 372 },
+            { "192.168.14.20", 370 },
+
+            { "192.168.13.10", 373 },
+            { "192.168.13.20", 373 },
+
             { "192.168.15.10", 371 },
-            { "192.168.13.10", 373 }
+            { "192.168.15.20", 371 },
+            { "192.168.15.30", 371 },
+
+            { "192.168.25.10", 372 },
+            { "192.168.25.20", 372 },
         };
 
         _logger.LogInformation("Pinging regions to detect offline ones...");

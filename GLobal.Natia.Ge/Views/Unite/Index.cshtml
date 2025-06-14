@@ -14,7 +14,7 @@
 
     @if (rand.Hour >= 22 || rand.Hour <= 10)
     {
-        <link rel="stylesheet" href="http://192.168.1.102:8080/NatiaResource/Dark.css" />
+        <link rel="stylesheet" href="http://192.168.1.102:8080/NatiaResource/Site.css" />
     }
     else if (rand.Month == 12 || rand.Month == 1)
     {
@@ -22,7 +22,7 @@
     }
     else
     {
-        <link rel="stylesheet" href="http://192.168.1.102:8080/NatiaResource/Site.css" />
+    <link rel="stylesheet" href="http://192.168.1.102:8080/NatiaResource/Dark.css" />
     }
 
     <style>
@@ -83,7 +83,7 @@
         setInterval(refreshPage, 4 * 60 * 60 * 1000);
     </script>
 
-    <div style="z-index:900;position:absolute; margin-left:40%;margin-top:25%">
+    <div style="z-index:900;position:absolute; margin-left:20%;margin-top:25%">
         <div id="robot-container" style="display:none">
             <img id="robot-image" src="http://192.168.1.102:8080/NatiaResource/Robot.gif" />
             <div id="robot-text">
@@ -142,7 +142,7 @@
                 {
                     buttonColorss = "yellow";
                 }
-                <form method="post"  asp-route-buttonId="@item.Value">
+                <form method="post" asp-route-buttonId="@item.Value" asp-action="#" asp-controller="#">
                     <button type="submit" id="button@(item.Key)" class="btn btn-primary button @(buttonColorss)">@item.Key. @item.Value</button>
                 </form>
                 i++;
@@ -287,7 +287,7 @@
                     <div class="card">
                         <div class="card-body">
                             <h4 class="card-title">${degree}</h4>
-                            <div class="btn-group" role="group"></div>
+                            <div class="btn-group" role="group" aria-label="Frequency Buttons"></div>
                         </div>
                     </div>
                 `);
@@ -306,14 +306,14 @@
                         if (match) {
                             mer = `${parseFloat(match[0]).toFixed(1)} dB`;
                         }
-                    }
+
 
                     const html = `
                         <form method="get" action="#">
-                            <input type="hidden" name="frequency" value="${detail.portIn250}" />
-                            <button type="submit" class="btn btn-primary button ${btnColor}">
+                            <input type="hidden" class="PortIn" name="frequency" value="${detail.portIn250}" />
+                            <button type="submit" class="btn btn-primary button ${btnColor} buttonIko">
                                 ${frequency} ${polarisation} ${symbolRate}
-                                <span style="color: black; font-size: 20px; font-weight: bold; margin-left: 3px;">${mer}</span>
+                                <span style="color: black; font-size: 20px; font-weight: bolder; margin-left: 3px;">${mer}</span>
                             </button>
                         </form>`;
                     freqGroup.append(html);

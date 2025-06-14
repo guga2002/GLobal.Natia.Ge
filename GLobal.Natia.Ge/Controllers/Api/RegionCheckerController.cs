@@ -50,12 +50,20 @@ public class RegionCheckerController : ControllerBase
     {
         List<int> regions = new List<int>();
 
-        var regionIps = new Dictionary<string, int>
+        var regionIps = new Dictionary<string, int>// all regions  must check
         {
             { "192.168.14.10", 370 },
-            { "192.168.25.10", 372 },
+            { "192.168.14.20", 370 },
+
+            { "192.168.13.10", 373 },
+            { "192.168.13.20", 373 },
+
             { "192.168.15.10", 371 },
-            { "192.168.13.10", 373 }
+            { "192.168.15.20", 371 },
+            { "192.168.15.30", 371 },
+
+            { "192.168.25.10", 372 },
+            { "192.168.25.20", 372 },
         };
 
         var pingTasks = regionIps.Select(async region =>
@@ -71,6 +79,7 @@ public class RegionCheckerController : ControllerBase
             }
             catch (Exception ex)
             {
+                regions.Add(region.Value);
                 await Console.Out.WriteLineAsync(ex.Message);
             }
         }).ToList();

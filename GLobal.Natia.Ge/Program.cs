@@ -10,7 +10,6 @@ using Common.Domain.Services;
 using Common.Domain.SignalR;
 using Common.Persistance.Interface;
 using Common.Persistance.Services;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
@@ -89,11 +88,9 @@ builder.Services.AddScoped<IGetEmrDataServices, GetEmrDataServices>();
 
 builder.Services.AddScoped<RegionChecker>();
 
-
 builder.Services.AddHostedService<VirtualEnginner>();
 
 builder.Services.AddScoped<IEmrServices, EmrProvideService>();
-
 
 builder.Services.AddScoped<IBackupService, BackupService>();
 
@@ -117,19 +114,24 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-
-
 app.MapControllers();
+
 app.UseStaticFiles();
+
 app.UseRouting();
+
 app.UseCors();
+
 app.MapHub<UniteMonitoringHub>("/uniteHub");
+
 app.MapDefaultControllerRoute();
+
 app.MapControllerRoute(
     name: "default",
    pattern: "{controller=Unite}/{action=Index}");
 
 app.UseSwagger();
+
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Global TV API V1");
