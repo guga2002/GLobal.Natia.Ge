@@ -36,7 +36,7 @@ public class RegionDataController : ControllerBase
 
                 var problemList = problemsRaw.Split(";", StringSplitOptions.RemoveEmptyEntries).ToList();
                 var html = GenerateHtmlTemplate(problemList);
-                //await _smtp.SendMessage(html);
+                return Ok(html);
             }
 
             if (!string.IsNullOrWhiteSpace(regionData?.Text))
