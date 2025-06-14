@@ -1,27 +1,35 @@
-﻿using Common.Domain.Interface;
-using Common.Domain.Services;
-using Common.Persistance.Services;
+﻿using Common.Persistance.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GLobal.Natia.Ge.Controllers;
 
 public class ImportantChanellController : Controller
 {
-    private readonly IRedisService redisService;
 
-    public ImportantChanellController(IRedisService redisService)
+    public ImportantChanellController()
     {
-        this.redisService= redisService;
     }
 
     public async Task<IActionResult> Index()
     {
-        var redis = await redisService.GetAsync<List<MulticastAnalysisResult>>("SystemStreamInfo");
+        var url = new Uri("https://192.168.0.79:2000/api/Controll/checkrobot/SystemStreamInfo");
 
-        foreach (var item in redis)
+        var handler = new HttpClientHandler
         {
-            await Console.Out.WriteLineAsync(item.Ip);
+            ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true
+        };
+        var client = new HttpClient(handler);
+
+        var response = await client.GetAsync(url);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadAsStringAsync();
+
+            var actres = System.Text.Json.JsonSerializer.Deserialize<List<MulticastAnalysisResult>>(result);
+            return View(actres);
         }
-        return View(redis);
+
+        return View(new List<MulticastAnalysisResult>());
     }
 }

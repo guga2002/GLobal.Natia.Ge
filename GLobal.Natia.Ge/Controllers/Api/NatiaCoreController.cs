@@ -117,12 +117,30 @@ public class NatiaCoreController : ControllerBase
             _logger.LogInformation("GetAnniversaryDates checked.");
             var time = DateTime.Now;
 
-            var res = await redisService.GetAsync<List<string>>("letscheck");
+            var url = new Uri("https://192.168.0.79:2000/api/Controll/checkrobot/GetRobotSay");
 
-            if (res is not null && res.Count > 3)
+            var handler = new HttpClientHandler
             {
-                var joined = string.Join(", ", res.Take(3));
-                return Ok(joined);
+                ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true
+            };
+            var client = new HttpClient(handler);
+
+            var response = await client.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadAsStringAsync();
+
+                var actres = System.Text.Json.JsonSerializer.Deserialize<List<string>>(result);
+                if (actres is not null && actres.Count > 3)
+                {
+                    var joined = string.Join(", ", actres.Take(3));
+                    return Ok(joined);
+                }
+            }
+            else
+            {
+                _logger.LogWarning("Health check failed with status code: {StatusCode}", response.StatusCode);
             }
 
             var holidays = new Dictionary<(int, int), string>
