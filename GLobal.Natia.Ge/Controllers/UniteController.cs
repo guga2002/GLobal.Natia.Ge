@@ -6,7 +6,6 @@ using Common.Persistance.Extensions;
 using Common.Persistance.Interface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using static Azure.Core.HttpHeader;
 
 namespace GLobal.Natia.Ge.Controllers;
 
@@ -102,8 +101,8 @@ public class UniteController : Controller
 
             await _hub.Clients.All.SendAsync("temperatureUpdate", new
             {
-                temperature = result.temperature,
-                humidity = result.humidity
+                result.temperature,
+                result.humidity
             });
 
             await _hub.Clients.All.SendAsync("channelStatusUpdate", new

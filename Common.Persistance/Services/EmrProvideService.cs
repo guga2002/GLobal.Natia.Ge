@@ -27,7 +27,7 @@ public class EmrProvideService: IEmrServices
         List<string> lst = new List<string>() { };
         var time = DateTime.Now;
 
-        if (time.Hour == 15 && time.Minute >= 00 && time.Minute <= 03 && time.ToString("tt") == "PM")//shuadgemshvidobisa
+        if (time.Hour == 15 && time.Minute >= 00 && time.Minute <= 02 && time.ToString("tt").ToLower() == "pm")//shuadgemshvidobisa
         {
             if (count < 1)
             {
@@ -37,7 +37,7 @@ public class EmrProvideService: IEmrServices
             count++;
         }
         else
-        if (time.Hour == 18 && time.Minute >= 10 && time.Minute <= 13 && time.ToString("tt") == "PM")//sagamomshvidobisa
+        if (time.Hour == 18 && time.Minute >= 00 && time.Minute <= 02 && time.ToString("tt").ToLower() == "pm")//sagamomshvidobisa
         {
             if (count < 1)
             {
@@ -47,7 +47,7 @@ public class EmrProvideService: IEmrServices
             count++;
         }
         else
-        if (time.Hour == 22 && time.Minute >= 00 && time.Minute <= 02 && time.ToString("tt") == "PM")//gamemshvidobisa
+        if (time.Hour == 22 && time.Minute >= 00 && time.Minute <= 02 && time.ToString("tt").ToLower() == "pm")//gamemshvidobisa
         {
             if (count < 1)
             {
@@ -57,7 +57,7 @@ public class EmrProvideService: IEmrServices
             count++;
         }
         else
-        if (time.Hour == 10 && time.Minute >= 01 && time.Minute <= 03 && time.ToString("tt") == "AM")//dilamshvidobisa
+        if (time.Hour == 10 && time.Minute >= 01 && time.Minute <= 03 && time.ToString("tt").ToLower() == "am")//dilamshvidobisa
         {
             if (count < 1)
             {

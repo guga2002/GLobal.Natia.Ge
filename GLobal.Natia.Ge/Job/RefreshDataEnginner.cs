@@ -100,8 +100,8 @@ public class RefreshDataEnginner : BackgroundService
 
                     await _hub.Clients.All.SendAsync("temperatureUpdate", new
                     {
-                        temperature = temp.temperature,
-                        humidity = temp.humidity
+                       temp.temperature,
+                       temp.humidity
                     }, stoppingToken);
                     _logger.LogInformation("🌡 Temperature/humidity update pushed.");
                 }
