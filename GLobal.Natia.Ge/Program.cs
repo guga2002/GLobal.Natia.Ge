@@ -10,7 +10,6 @@ using Common.Domain.Services;
 using Common.Domain.SignalR;
 using Common.Persistance.Interface;
 using Common.Persistance.Services;
-using GLobal.Natia.Ge.Job;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
@@ -49,7 +48,7 @@ builder.Services.AddSignalR();
 
 builder.Services.AddHostedService<RefreshDataEnginner>();
 
-builder.Services.AddHostedService<StreamAnalytics>();
+//builder.Services.AddHostedService<StreamAnalytics>();
 
 builder.Services.AddScoped<IChanellRepository, ChanellRepository>();
 

@@ -3,6 +3,7 @@ using Common.Domain.Interface;
 using Common.Persistance.Interface;
 using Common.Persistance.Services;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace GLobal.Natia.Ge.Controllers.Api;
@@ -125,7 +126,7 @@ public class NatiaCoreController : ControllerBase
             {
                 var result = await response.Content.ReadAsStringAsync();
 
-                var actres = System.Text.Json.JsonSerializer.Deserialize<List<string>>(result);
+                var actres = JsonConvert.DeserializeObject<List<string>>(result);
 
                 if (actres is not null && actres.Count > 3)
                 {

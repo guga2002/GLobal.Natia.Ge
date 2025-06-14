@@ -4,6 +4,13 @@
 @{
     ViewData["Title"] = "Multicast Stream Analysis Summary";
     Layout = null;
+    if(Model.Count>0)
+    {
+        foreach (var item in Model)
+        {
+            <h5 class="m-0">@item.bitratekbps</h5>
+        }
+    }
 }
 
 <!DOCTYPE html>
@@ -70,14 +77,14 @@
         <h5 class="m-0">📡 Multicast Stream Analysis Summary</h5>
     </div>
 
-      <form method="get" asp-action="Index" asp-controller="Unite">
-        <button type="submit" class="btn btn-primary button" style="width:100%;">
+       <form method="get" asp-action="Index" asp-controller="Unite">
+        <button type="submit" class="btn btn-primary button" style="width:100%;"> 
     <div class="group-container">
         @if (Model != null && Model.Any())
         {
             var ipGroups = Model
-            .Where(m => !string.IsNullOrWhiteSpace(m.Ip) && m.Programs?.Any(p => p.IsProblematic) == true)
-            .GroupBy(m => m.Ip)
+            .Where(m => !string.IsNullOrWhiteSpace(m.ip) && m.programs?.Any(p => p.isproblematic) == true)
+            .GroupBy(m => m.ip)
             .OrderBy(g => g.Key);
 
             foreach (var ipGroup in ipGroups)
@@ -87,32 +94,32 @@
                             <div class="grid-container">
                         @foreach (var result in ipGroup)
                         {
-                            foreach (var program in result.Programs?.Where(p => p.IsProblematic) ?? Enumerable.Empty<ProgramAnalysisResult>())
+                            foreach (var program in result.programs?.Where(p => p.isproblematic) ?? Enumerable.Empty<ProgramAnalysisResult>())
                             {
                                         <div class="card program-card">
                                     <div class="card-header py-1 px-2 bg-danger text-white">
-                                        🎥 პროგრამა @program.ProgramId
+                                        🎥 პროგრამა @program.programid
                                     </div>
                                     <div class="card-body py-2 px-3">
                                         <div class="mb-1">
-                                            <strong>⏱:</strong> @result.DurationSeconds წმ <br />
-                                            <strong>📦:</strong> @result.TotalPackets <br />
-                                            <strong>📶:</strong> @result.BitrateKbps.ToString("F2") kbps
+                                            <strong>⏱:</strong> @result.durationseconds წმ <br />
+                                            <strong>📦:</strong> @result.totalpackets <br />
+                                            <strong>📶:</strong> @result.bitratekbps.ToString("F2") kbps
                                         </div>
 
-                                        @if (!program.HasVideo)
+                                        @if (!program.hasvideo)
                                         {
                                             <div class="text-warning">❌ ვიდეო ნაკადი არ არის.</div>
                                         }
 
-                                        @if (program.MissingStreams != null && program.MissingStreams.Any())
+                                        @if (program.missingstreams != null && program.missingstreams.Any())
                                         {
                                             <div class="mb-2">
                                                 <span class="text-danger">❌ აკლია ნაკადები:</span>
                                                 <ul class="missing-streams mb-1">
-                                                    @foreach (var missing in program.MissingStreams)
+                                                    @foreach (var missing in program.missingstreams)
                                                     {
-                                                        <li>@missing.Type (PID: @missing.Pid)</li>
+                                                        <li>@missing.type (PID: @missing.pid)</li>
                                                     }
                                                 </ul>
                                             </div>
@@ -128,18 +135,18 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach (var stream in program.Streams ?? Enumerable.Empty<StreamInfo>())
+                                                @foreach (var stream in program.streams ?? Enumerable.Empty<StreamInfo>())
                                                 {
-                                                    <tr class="@(stream.ContinuityErrors > 10 ? "table-danger" : "")">
-                                                        <td>@stream.Type</td>
-                                                        <td>@stream.Pid</td>
-                                                        <td>@stream.PacketCount</td>
+                                                    <tr class="@(stream.continuityerrors > 10 ? "table-danger" : "")">
+                                                        <td>@stream.type</td>
+                                                        <td>@stream.pid</td>
+                                                        <td>@stream.packetcount</td>
                                                         <td>
-                                                            @stream.ContinuityErrors
-                                                            @if (stream.ErrorDetails != null && stream.ErrorDetails.Any())
+                                                            @stream.continuityerrors
+                                                            @if (stream.errordetails != null && stream.errordetails.Any())
                                                             {
                                                                 <ul class="mb-0 ps-3">
-                                                                    @foreach (var detail in stream.ErrorDetails)
+                                                                    @foreach (var detail in stream.errordetails)
                                                                     {
                                                                         <li>@detail</li>
                                                                     }
@@ -159,7 +166,7 @@
             }
         }
     </div>
-    </button>
-    </form> 
+     </button> 
+     </form>
 </body>
 </html>
