@@ -117,14 +117,8 @@ public class NatiaCoreController : ControllerBase
             _logger.LogInformation("GetAnniversaryDates checked.");
             var time = DateTime.Now;
 
-            var url = new Uri("https://192.168.0.79:2000/api/Controll/checkrobot/GetRobotSay");
-
-            var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true
-            };
-            var client = new HttpClient(handler);
-
+            var url = new Uri("http://192.168.0.13:9999/api/ExcelData/GetRobotSay");
+            var client = new HttpClient();
             var response = await client.GetAsync(url);
 
             if (response.IsSuccessStatusCode)
@@ -132,6 +126,7 @@ public class NatiaCoreController : ControllerBase
                 var result = await response.Content.ReadAsStringAsync();
 
                 var actres = System.Text.Json.JsonSerializer.Deserialize<List<string>>(result);
+
                 if (actres is not null && actres.Count > 3)
                 {
                     var joined = string.Join(", ", actres.Take(3));

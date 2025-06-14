@@ -12,13 +12,9 @@ public class ImportantChanellController : Controller
 
     public async Task<IActionResult> Index()
     {
-        var url = new Uri("https://192.168.0.79:2000/api/Controll/checkrobot/SystemStreamInfo");
+        var url = new Uri("http://192.168.0.13:9999/api/ExcelData/SystemStreamInfo");
 
-        var handler = new HttpClientHandler
-        {
-            ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true
-        };
-        var client = new HttpClient(handler);
+        var client = new HttpClient();
 
         var response = await client.GetAsync(url);
 
