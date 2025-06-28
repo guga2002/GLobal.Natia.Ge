@@ -10,6 +10,7 @@ namespace Common.Persistance.Services;
 public class EmrServices : IService
 {
     private readonly HttpClient _httpClient;
+    private static Random _random = new Random();
     public EmrServices(HttpClient httpClient)
     {
         _httpClient = httpClient;
@@ -79,7 +80,7 @@ public class EmrServices : IService
         List<int> lst = new List<int>();
         try
         {
-            string link = $"http://192.168.20.250/goform/formEMR30?type=8&cmd=1&language=0&slotNo=255&alarmSlotNo=NaN&ran=0.362191435456645";
+            string link = $"http://192.168.20.250/goform/formEMR30?type=8&cmd=1&language=0&slotNo=255&alarmSlotNo=NaN&ran=0.36{_random.Next()}";
 
             using (HttpClient client = new HttpClient())
             {
@@ -225,11 +226,11 @@ public class EmrServices : IService
         {
             var urls = new[]
                         {
-                          "http://192.168.20.210/goform/formEMR30?type=5&cmd=1&rowIndex=0&language=0&slotNo=6&portNo=0&ran=0.27117265330512463",
-                          "http://192.168.20.210/goform/formEMR30?type=5&cmd=1&rowIndex=32&language=0&slotNo=6&portNo=0&ran=0.6016903270097027",
-                          "http://192.168.20.210/goform/formEMR30?type=5&cmd=1&rowIndex=64&language=0&slotNo=6&portNo=0&ran=0.9630006746823162",
-                          "http://192.168.20.210/goform/formEMR30?type=5&cmd=1&rowIndex=96&language=0&slotNo=6&portNo=0&ran=0.5519907333657804",
-                          "http://192.168.20.210/goform/formEMR30?type=5&cmd=1&rowIndex=128&language=0&slotNo=6&portNo=0&ran=0.5395086937741503"
+                          $"http://192.168.20.210/goform/formEMR30?type=5&cmd=1&rowIndex=0&language=0&slotNo=6&portNo=0&ran=0.27{_random.Next()}",
+                          $"http://192.168.20.210/goform/formEMR30?type=5&cmd=1&rowIndex=32&language=0&slotNo=6&portNo=0&ran=0.60{_random.Next()}",
+                          $"http://192.168.20.210/goform/formEMR30?type=5&cmd=1&rowIndex=64&language=0&slotNo=6&portNo=0&ran=0.96{_random.Next()}",
+                         $"http://192.168.20.210/goform/formEMR30?type=5&cmd=1&rowIndex=96&language=0&slotNo=6&portNo=0&ran=0.551{_random.Next()}",
+                          $"http://192.168.20.210/goform/formEMR30?type=5&cmd=1&rowIndex=128&language=0&slotNo=6&portNo=0&ran=0.53{_random.Next()}"
                         };
 
             var allChannels = new List<ChannelInfo>();
