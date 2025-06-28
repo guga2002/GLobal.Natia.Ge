@@ -1,11 +1,20 @@
 ﻿using Common.Domain.Models.PageVIewModel;
+using Common.Persistance.Entities;
 using Common.Persistance.Interface;
+using System.Globalization;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 
 namespace Common.Persistance.Services;
 
 public class EmrServices : IService
 {
+    private readonly HttpClient _httpClient;
+    public EmrServices(HttpClient httpClient)
+    {
+        _httpClient = httpClient;
+    }
+
     public async Task<Dictionary<int, string>> GetChanellNames()
     {
         using (var httpClient = new HttpClient())
@@ -208,4 +217,98 @@ public class EmrServices : IService
         }
         return "";
     }
+
+
+    public async Task<List<ChannelInfo>> GetIpChanellsChannelInfoAsync()
+    {
+        try
+        {
+            var urls = new[]
+                        {
+                          "http://192.168.20.210/goform/formEMR30?type=5&cmd=1&rowIndex=0&language=0&slotNo=6&portNo=0&ran=0.27117265330512463",
+                          "http://192.168.20.210/goform/formEMR30?type=5&cmd=1&rowIndex=32&language=0&slotNo=6&portNo=0&ran=0.6016903270097027",
+                          "http://192.168.20.210/goform/formEMR30?type=5&cmd=1&rowIndex=64&language=0&slotNo=6&portNo=0&ran=0.9630006746823162",
+                          "http://192.168.20.210/goform/formEMR30?type=5&cmd=1&rowIndex=96&language=0&slotNo=6&portNo=0&ran=0.5519907333657804",
+                          "http://192.168.20.210/goform/formEMR30?type=5&cmd=1&rowIndex=128&language=0&slotNo=6&portNo=0&ran=0.5395086937741503"
+                        };
+
+            var allChannels = new List<ChannelInfo>();
+
+            foreach (var url in urls)
+            {
+                var channels = await GetChannelInfoFromUrlAsync(url);
+                allChannels.AddRange(channels);
+            }
+            return allChannels;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching channel info: {ex.Message}");
+            return new List<ChannelInfo>();
+        }
+    }
+
+    private async Task<List<ChannelInfo>> GetChannelInfoFromUrlAsync(string url)
+    {
+        var response = await _httpClient.GetStringAsync(url);
+        var channelInfos = new List<ChannelInfo>();
+        var blocks = response.Split("<*1*>", StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var block in blocks)
+        {
+            var parts = block.Split("<*2*>", StringSplitOptions.None);
+            if (parts.Length >= 5)
+            {
+                var rawName = parts[1].Trim();
+                var bitrate1Str = parts[3].Trim();
+                var bitrate2Str = parts[4].Trim();
+
+                var nameOnly = Regex.Replace(rawName, @"(?i)^Port\d*|\d+|[^\p{L}\s]", "").Trim();
+
+                if (!string.IsNullOrWhiteSpace(nameOnly) && Regex.IsMatch(nameOnly, @"[a-zA-Z\u10A0-\u10FF]"))
+                {
+                    double bitrate1 = ParseBitrate(bitrate1Str);
+                    double bitrate2 = ParseBitrate(bitrate2Str);
+
+                    channelInfos.Add(new ChannelInfo
+                    {
+                        Name = nameOnly,
+                        Bitrate1Mbps = bitrate1,
+                        Bitrate2Mbps = bitrate2
+                    });
+                }
+            }
+        }
+
+        return channelInfos;
+    }
+
+    private double ParseBitrate(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return 0.0;
+
+        raw = raw.Trim().ToLowerInvariant();
+
+        if (raw.EndsWith("mbps"))
+        {
+            if (double.TryParse(raw.Replace("mbps", "").Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out var mbps))
+                return mbps;
+        }
+        else if (raw.EndsWith("kbps"))
+        {
+            if (double.TryParse(raw.Replace("kbps", "").Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out var kbps))
+
+                if (kbps < 650)
+                    return 0.01;
+        }
+        else if (raw.EndsWith("bps"))
+        {
+            if (double.TryParse(raw.Replace("bps", "").Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out var bps))
+                return bps / 1000000.0;
+        }
+
+        return 0.0;
+    }
+
 }
