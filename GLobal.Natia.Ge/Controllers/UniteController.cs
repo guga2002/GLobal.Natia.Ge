@@ -6,7 +6,6 @@ using Common.Persistance.Extensions;
 using Common.Persistance.Interface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-
 namespace GLobal.Natia.Ge.Controllers;
 
 public class UniteController : Controller
