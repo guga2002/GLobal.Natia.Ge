@@ -15,13 +15,9 @@ public class SatteliteFrequencyService : AbstractService, ISatteliteFrequencySer
 
     public async Task<List<int>> GetAllarmsFromRegion()
     {
-        var handler = new HttpClientHandler
+        using (var client = new HttpClient())
         {
-            ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true
-        };
-        using (var client = new HttpClient(handler))
-        {
-            var result = await client.GetAsync("https://192.168.1.102:3999/api/RegionChecker/GetRegionWhereOpticIsOff");
+            var result = await client.GetAsync("http://192.168.1.102:3999/api/RegionChecker/GetRegionWhereOpticIsOff");
 
             if (result.IsSuccessStatusCode)
             {
