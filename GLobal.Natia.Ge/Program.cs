@@ -67,10 +67,6 @@ try
     builder.WebHost.UseKestrel(options =>
     {
         options.ListenAnyIP(3395); // HTTP
-        options.Listen(IPAddress.Any, 3999, listenOptions =>
-        {
-            listenOptions.UseHttps(); // HTTPS
-        });
     });
 
     var app = builder.Build();
