@@ -17,7 +17,7 @@ public class SatteliteFrequencyService : AbstractService, ISatteliteFrequencySer
     {
         using (var client = new HttpClient())
         {
-            var result = await client.GetAsync("http://192.168.1.102:3999/api/RegionChecker/GetRegionWhereOpticIsOff");
+            var result = await client.GetAsync("http://192.168.1.102:3395/api/RegionChecker/GetRegionWhereOpticIsOff");
 
             if (result.IsSuccessStatusCode)
             {
