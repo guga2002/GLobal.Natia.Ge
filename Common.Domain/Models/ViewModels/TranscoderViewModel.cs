@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Web.Mvc;
 
 namespace Common.Domain.Models.ViewModels;
 
@@ -20,8 +19,4 @@ public class TranscoderViewModel
 
     [Display(Name = "ტრანსკოდირების ფორმატი")]
     public string? TranscodingFormat { get; set; }
-
-    public List<SelectListItem> TranscodingFormatList { get; set; }
-    public List<SelectListItem> CHanellNameList { get; set; }
-    public List<SelectListItem> EmrNumberList { get; set; }
 }

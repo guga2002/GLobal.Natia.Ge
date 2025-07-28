@@ -29,32 +29,38 @@ public class NatiaCoreController : ControllerBase
         this.chanells = chanells;
     }
 
-
     [HttpGet("GetChanellNames")]
     public async Task<IActionResult> GetChanellNames(string emr)
     {
-       var res=await chanells.GetEmrChanells(emr);
+        _logger.LogInformation("Fetching channel names for EMR: {Emr}", emr);
+        var res = await chanells.GetEmrChanells(emr);
+        _logger.LogInformation("Retrieved {Count} channel names for EMR: {Emr}", res?.Count() ?? 0, emr);
         return Ok(res);
     }
 
     [HttpGet("GetProblematicChanells")]
     public async Task<IActionResult> GetProblematicChanells(string emr)
     {
+        _logger.LogInformation("Fetching problematic channels for EMR: {Emr}", emr);
         var redis = await redisService.GetAsync<List<MulticastAnalysisResult>>("SystemStreamInfo");
+        _logger.LogInformation("Retrieved {Count} problematic channels from Redis for EMR: {Emr}", redis?.Count ?? 0, emr);
         return Ok(redis);
     }
 
     [HttpGet("natiaFeedback")]
     public async Task<IActionResult> GetNatiaFeedback()
     {
+        _logger.LogInformation("Fetching Natia feedback (current problems in system).");
         var problems = await _Service.GetTotalProblemsWhatWeHaveRightNowOverSystem();
         int count = problems.Count;
+        _logger.LogInformation("System currently has {Count} problems.", count);
 
         string natiaMessage = string.Empty;
 
         if (count > 14 && count < 20)
         {
             natiaMessage = "⚠️ სისტემაში შესამჩნევი პრობლემებია. გთხოვთ, მოახდინოთ შესაბამისი რეაგირება.";
+            _logger.LogWarning("Moderate system alert: {Count} problems detected.", count);
         }
         else if (count > 20)
         {
@@ -62,11 +68,15 @@ public class NatiaCoreController : ControllerBase
             natiaMessage =
                 $"ახლა იცი რას დავაკვირდი? დიდი პრობლემა გვაქვს! სისტემაში {count} პორტია დაზიანებული!  ჯამურად\n\n" +
                 $"გთხოვთ დაუყოვნებლივ შეამოწმოთ მოწყობილობები და გადადგათ შესაბამისი ნაბიჯები. ეს უკვე სერიოზული რამეა... {count} ალარმი არ გვეკადრება, თუნდაც ჯამური!";
+            _logger.LogError("Critical system alert: {Count} problems detected. Ports: {Ports}", count, affectedPorts);
+        }
+        else
+        {
+            _logger.LogInformation("System is within normal problem thresholds ({Count}).", count);
         }
 
         return Ok(natiaMessage);
     }
-
 
     [HttpGet]
     [Route("info")]
@@ -77,6 +87,7 @@ public class NatiaCoreController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Checking Natia port alarm info...");
             var regionPort = await redisService.GetAsync<List<string>>("RegionInfo") ?? new();
             var currentList = (await _Service.GetPortsWhereAlarmsIsOn()).Concat(regionPort).Distinct().OrderBy(x => x).ToList();
             var currentCsv = string.Join(",", currentList);
@@ -92,14 +103,18 @@ public class NatiaCoreController : ControllerBase
 
             if (difference.Count > 1)
             {
+                _logger.LogInformation("Triggering Natia announcement. Changed codes: {Count}, Time since last: {Minutes} mins",
+                    difference.Count, timeSinceLast.TotalMinutes);
+
                 await redisService.SetAsync("LastPortCodes:Natia", currentCsv);
                 await redisService.SetAsync("LastPortAnnounce:Natia", DateTime.UtcNow.Ticks);
 
-                _logger.LogInformation("Announcement triggered: {Count} code(s) changed or {Min} mins passed", difference.Count, timeSinceLast.TotalMinutes);
                 return Ok(currentList);
             }
 
-            _logger.LogInformation("Ignored update. Only {Count} code(s) changed and only {Min} mins passed", difference.Count, timeSinceLast.TotalMinutes);
+            _logger.LogInformation("Announcement skipped. Changed codes: {Count}, Time since last: {Minutes} mins",
+                difference.Count, timeSinceLast.TotalMinutes);
+
             return Ok(new List<string> { "300000" });
         }
         catch (Exception ex)
@@ -108,7 +123,6 @@ public class NatiaCoreController : ControllerBase
             return Ok(new List<string> { "900000" });
         }
     }
-
 
     [HttpGet("GetAnniversaryDates")]
     [SwaggerOperation(Summary = "Get information about GetAnniversaryDates", Description = "Fetches a greeting message if today's date matches a significant holiday.", OperationId = "GetAnniversaryDates")]
@@ -119,7 +133,7 @@ public class NatiaCoreController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("GetAnniversaryDates checked.");
+            _logger.LogInformation("Checking for anniversary dates and holiday greetings...");
             var time = DateTime.Now;
 
             var url = new Uri("http://192.168.0.13:9999/api/ExcelData/GetRobotSay");
@@ -128,6 +142,7 @@ public class NatiaCoreController : ControllerBase
 
             if (response.IsSuccessStatusCode)
             {
+                _logger.LogInformation("RobotSay API responded successfully.");
                 var result = await response.Content.ReadAsStringAsync();
 
                 var actres = JsonConvert.DeserializeObject<List<string>>(result);
@@ -135,12 +150,17 @@ public class NatiaCoreController : ControllerBase
                 if (actres is not null && actres.Count > 3)
                 {
                     var joined = string.Join(", ", actres.Take(3));
+                    _logger.LogInformation("RobotSay returned a valid list: {Joined}", joined);
                     return Ok(joined);
+                }
+                else
+                {
+                    _logger.LogInformation("RobotSay returned insufficient data (Count={Count}).", actres?.Count ?? 0);
                 }
             }
             else
             {
-                _logger.LogWarning("Health check failed with status code: {StatusCode}", response.StatusCode);
+                _logger.LogWarning("RobotSay API request failed with status code: {StatusCode}", response.StatusCode);
             }
 
             var holidays = new Dictionary<(int, int), string>
@@ -160,9 +180,11 @@ public class NatiaCoreController : ControllerBase
 
             if (holidays.TryGetValue((time.Month, time.Day), out var message) && IsCurrentTimeInRange())
             {
+                _logger.LogInformation("Anniversary date detected: {Message}", message);
                 return Ok(message);
             }
 
+            _logger.LogInformation("No matching anniversary date for today ({Date}).", time.ToShortDateString());
             return NoContent();
         }
         catch (Exception ex)

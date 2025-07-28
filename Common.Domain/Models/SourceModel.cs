@@ -1,6 +1,4 @@
-﻿using System.Web.Mvc;
-
-namespace Common.Domain.Models
+﻿namespace Common.Domain.Models
 {
     public class SourceModel
     {
@@ -14,13 +12,6 @@ namespace Common.Domain.Models
 
         public int? Reciever_ID { get; set; }
 
-        public List<SelectListItem>? RecieverList { get; set; }
-
-        public List<SelectListItem>? ChanellList { get; set; }
-
-        public List<SelectListItem>? StatusList { get; set; }
-
-        public List<SelectListItem>? CHanellFormatList { get; set; }
 
         public string EMR { get; set; } = "Undefined";
 

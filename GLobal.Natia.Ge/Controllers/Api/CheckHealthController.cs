@@ -9,10 +9,12 @@ namespace GLobal.Natia.Ge.Controllers.Api;
 public class CheckHealthController : ControllerBase
 {
     private readonly IRedisService _redis;
+    private readonly ILogger<CheckHealthController> _logger;
 
-    public CheckHealthController(IRedisService redis)
+    public CheckHealthController(IRedisService redis, ILogger<CheckHealthController> logger)
     {
         _redis = redis;
+        _logger = logger;
     }
 
     private static readonly object _printerLock = new();
@@ -38,34 +40,52 @@ public class CheckHealthController : ControllerBase
     public async Task<IActionResult> GetSystemHealth()
     {
         var now = DateTime.Now;
+        _logger.LogDebug("System health check triggered at {Time}", now);
 
+        // Printer health check (every 5 mins)
         if (ShouldCheck(ref _lastPrinterCheck, now, minutes: 5, _printerLock))
         {
+            _logger.LogInformation("Pinging printer at IP {Ip}...", PrinterIp);
             var pingResult = await PingPrinterAsync(PrinterIp);
             if (!pingResult)
             {
                 var error = PrinterErrorMessages[Random.Shared.Next(PrinterErrorMessages.Length)];
+                _logger.LogWarning("Printer is unreachable. Returning error message: {Message}", error);
                 return Ok(error);
+            }
+            else
+            {
+                _logger.LogDebug("Printer ping successful.");
             }
         }
 
+        // Backup health message
         var backupMessage = await _redis.GetAsync<string>(BackupKey);
         if (!string.IsNullOrEmpty(backupMessage))
         {
+            _logger.LogInformation("Backup completion message found: {Message}", backupMessage);
             await _redis.DeleteAsync(BackupKey);
             return Ok(backupMessage);
         }
 
+        // General system health (every 4 mins)
         if (ShouldCheck(ref _lastSystemCheck, now, minutes: 4, _systemLock))
         {
+            _logger.LogDebug("Checking Redis for system health key...");
             var redisHealth = await _redis.GetAsync<string>(SystemHealthKey);
             if (!string.IsNullOrEmpty(redisHealth))
             {
+                _logger.LogWarning("System health warning found: {Message}", redisHealth);
                 await _redis.DeleteAsync(SystemHealthKey);
                 return Ok(redisHealth);
             }
+            else
+            {
+                _logger.LogDebug("No system health warnings in Redis.");
+            }
         }
 
+        _logger.LogInformation("System health check returned NoContent (all clear).");
         return NoContent();
     }
 

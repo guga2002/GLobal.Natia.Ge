@@ -1,143 +1,109 @@
 using System.Net;
 using Common.Data.Data;
-using Common.Data.Interfaces;
-using Common.Data.Repositories;
-using Common.Domain.Helpers;
-using Common.Domain.Interface;
-using Common.Domain.Jobs;
-using Common.Domain.Mapper;
-using Common.Domain.Services;
 using Common.Domain.SignalR;
-using Common.Persistance.Interface;
-using Common.Persistance.Services;
+using GLobal.Natia.Ge.ServiceExecutor;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
+using NLog;
+using NLog.Web;
 
-var builder = WebApplication.CreateBuilder(args);
+var logger = LogManager.Setup()
+    .LoadConfigurationFromAppSettings()
+    .GetCurrentClassLogger();
 
-builder.Services
-    .AddControllersWithViews()
-    .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
-
-builder.Services.AddControllers();
-
-builder.WebHost.UseKestrel(options =>
+try
 {
-    options.ListenAnyIP(3395);
-    options.Listen(IPAddress.Any, 3999, listenOptions =>
+    logger.Info("Starting Global TV API...");
+
+    var builder = WebApplication.CreateBuilder(args);
+
+    // -----------------------
+    // Configure NLog
+    // -----------------------
+    builder.Logging.ClearProviders();       // Remove default loggers
+    builder.Host.UseNLog();                 // Use NLog for DI logging
+
+    // -----------------------
+    // Configure Services
+    // -----------------------
+
+    builder.Services.AddControllersWithViews()
+        .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
+
+    // Database (SQL Server)
+    builder.Services.AddDbContext<GlobalTvDb>(options =>
     {
-        listenOptions.UseHttps();
+        options.UseSqlServer(builder.Configuration.GetConnectionString("GlobalCOnnection"));
     });
-});
 
+    // Redis
+    builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+        ConnectionMultiplexer.Connect("127.0.0.1:6379"));
 
+    // HTTP Client & SignalR
+    builder.Services.AddHttpClient();
+    builder.Services.AddSignalR();
 
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-    ConnectionMultiplexer.Connect("127.0.0.1:6379"));
+    // API Explorer + Swagger
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
 
-builder.Services.AddScoped<IRedisService, RedisService>();
-
-builder.Services.AddDbContext<GlobalTvDb>(opt =>
-{
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("GlobalCOnnection"));
-});
-
-builder.Services.AddHttpClient();
-
-builder.Services.AddSignalR();
-
-builder.Services.AddHostedService<RefreshDataEnginner>();
-
-//builder.Services.AddHostedService<StreamAnalytics>();
-
-builder.Services.AddScoped<IChanellRepository, ChanellRepository>();
-
-builder.Services.AddScoped<IDesclamlerCard, DesclamlerCardRepository>();
-
-builder.Services.AddScoped<IDesclambler, DesclamblerRepository>();
-
-builder.Services.AddScoped<IEmr60Info, Emr60InfoRepository>();
-
-builder.Services.AddScoped<ISourceRepository, SourceRepository>();
-
-builder.Services.AddScoped<ITranscoderRepository, TranscoderReporitory>();
-
-builder.Services.AddScoped<IUniteOfWork, UniteOfWork>();
-
-builder.Services.AddScoped<IAllInOneService, AllInOneService>();
-
-builder.Services.AddScoped<ITranscoderService, TranscoderServices>();
-
-builder.Services.AddScoped<ISatteliteFrequencyService, SatteliteFrequencyService>();
-
-builder.Services.AddScoped<ISatteliteFrequency, SatteliteFrequencyRepository>();
-
-builder.Services.AddScoped<IChanellServices, ChanellServices>();
-
-builder.Services.AddScoped<IService, EmrServices>();
-
-builder.Services.AddScoped<IsourceServices, SourceService>();
-
-builder.Services.AddScoped<ITemperatureService, TemperatureService>();
-
-builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
-
-builder.Services.AddScoped<INatiaHealthCheck, NatiaHealthCheck>();
-
-builder.Services.AddScoped<IRegionsServices, RegionsServices>();
-
-builder.Services.AddScoped<IGetEmrDataServices, GetEmrDataServices>();
-
-builder.Services.AddScoped<RegionChecker>();
-
-builder.Services.AddHostedService<VirtualEnginner>();
-
-builder.Services.AddScoped<IEmrServices, EmrProvideService>();
-
-builder.Services.AddScoped<IBackupService, BackupService>();
-
-builder.Services.AddControllers();
-
-builder.Services.AddEndpointsApiExplorer();
-
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
+    // CORS (Allow all origins)
+    builder.Services.AddCors(options =>
     {
-        policy
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials()
-            .SetIsOriginAllowed(origin => true);
+        options.AddDefaultPolicy(policy =>
+        {
+            policy.AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials()
+                  .SetIsOriginAllowed(_ => true);
+        });
     });
-});
 
-builder.Services.AddSwaggerGen();
+    // Register external services (from your custom method)
+    builder.Services.ActiveExternalServices();
 
-var app = builder.Build();
+    // Configure Kestrel for HTTP & HTTPS
+    builder.WebHost.UseKestrel(options =>
+    {
+        options.ListenAnyIP(3395); // HTTP
+        options.Listen(IPAddress.Any, 3999, listenOptions =>
+        {
+            listenOptions.UseHttps(); // HTTPS
+        });
+    });
 
-app.MapControllers();
+    var app = builder.Build();
 
-app.UseStaticFiles();
 
-app.UseRouting();
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Global TV API V1");
+        c.RoutePrefix = string.Empty; 
+    });
 
-app.UseCors();
+    app.UseStaticFiles();
+    app.UseRouting();
+    app.UseCors();
 
-app.MapHub<UniteMonitoringHub>("/uniteHub");
+    app.MapHub<UniteMonitoringHub>("/uniteHub");
+    app.MapControllers();
 
-app.MapDefaultControllerRoute();
+    app.MapControllerRoute(
+        name: "default",
+        pattern: "{controller=Unite}/{action=Index}");
 
-app.MapControllerRoute(
-    name: "default",
-   pattern: "{controller=Unite}/{action=Index}");
-
-app.UseSwagger();
-
-app.UseSwaggerUI(c =>
+    logger.Info("Global TV API started successfully.");
+    await app.RunAsync();
+}
+catch (Exception ex)
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Global TV API V1");
-    c.RoutePrefix = string.Empty;
-});
-
-app.Run();
+    // Log fatal errors
+    logger.Error(ex, "Application stopped due to an exception");
+    throw;
+}
+finally
+{
+    LogManager.Shutdown();
+}

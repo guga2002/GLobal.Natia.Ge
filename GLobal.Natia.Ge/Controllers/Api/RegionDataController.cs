@@ -10,13 +10,15 @@ namespace GLobal.Natia.Ge.Controllers.Api;
 public class RegionDataController : ControllerBase
 {
     private readonly IRedisService _redis;
-    //private readonly ISmtpService _smtp;
+    private readonly ILogger<RegionDataController> _logger;
+
     private const string RegionKey = "CheckRegionAndSentMessage";
     private const string BackupProblemKey = "EMRWHICHHAVEPROBLEMWHILEBACKUP";
 
-    public RegionDataController(IRedisService redis)
+    public RegionDataController(IRedisService redis, ILogger<RegionDataController> logger)
     {
         _redis = redis;
+        _logger = logger;
     }
 
     /// <summary>
@@ -25,6 +27,7 @@ public class RegionDataController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetData()
     {
+        _logger.LogInformation("Fetching region data and backup problem alerts from Redis...");
         try
         {
             var regionData = await _redis.GetAsync<RegionData>(RegionKey);
@@ -32,23 +35,28 @@ public class RegionDataController : ControllerBase
 
             if (!string.IsNullOrWhiteSpace(problemsRaw))
             {
+                _logger.LogWarning("Backup problem detected: {Problems}", problemsRaw);
                 await _redis.DeleteAsync(BackupProblemKey);
 
                 var problemList = problemsRaw.Split(";", StringSplitOptions.RemoveEmptyEntries).ToList();
                 var html = GenerateHtmlTemplate(problemList);
+                _logger.LogInformation("Generated HTML alert template for {Count} affected devices.", problemList.Count);
                 return Ok(html);
             }
 
             if (!string.IsNullOrWhiteSpace(regionData?.Text))
             {
+                _logger.LogInformation("Region-specific alert found: {Message}", regionData.Text);
                 await _redis.DeleteAsync(RegionKey);
                 return Ok(regionData.Text);
             }
 
+            _logger.LogInformation("No region data or backup problems found in Redis.");
             return NotFound("No region data or backup problems found.");
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while fetching region or backup data.");
             return StatusCode(500, new
             {
                 error = "დაფიქსირდა შეცდომა მონაცემების წამოღებისას",
@@ -60,6 +68,8 @@ public class RegionDataController : ControllerBase
 
     private string GenerateHtmlTemplate(List<string> ips)
     {
+        _logger.LogDebug("Generating HTML backup failure report for {Count} IP(s): {IPs}", ips.Count, string.Join(", ", ips));
+
         var sb = new StringBuilder();
 
         sb.AppendLine(@"<!DOCTYPE html>
