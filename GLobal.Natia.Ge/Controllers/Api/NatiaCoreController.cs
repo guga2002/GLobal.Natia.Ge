@@ -1,8 +1,12 @@
 ﻿using System.Data;
 using Common.Domain.Interface;
+using Common.Domain.Models.ViewModels;
+using Common.Domain.Models;
+using Common.Persistance.Extensions;
 using Common.Persistance.Interface;
 using Common.Persistance.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Annotations;
 

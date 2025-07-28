@@ -126,4 +126,100 @@ public class UniteController : Controller
         }
     }
 
+
+    [HttpGet("[controller]/api/GetDataForUI")]
+    public async Task<IActionResult> GetData()
+    {
+        var model = new UnitModelForApi();
+
+        try
+        {
+            // Start all tasks concurrently
+            var freqTask = ser.GetMonitoringFrequencies();
+            var portsTask = chanells.GetPortsWhereAlarmsIsOn();
+            var namesTask = chanells.GetChanellNames();
+            var tempTask = temperature.GetCUrrentTemperature();
+
+            // Fetch ports first because they’re needed for further processing
+            var ports = await portsTask;
+
+            // Try to enrich with region alarms, fallback if it fails
+            try
+            {
+                var portsRegion = await ser.GetAllarmsFromRegion();
+                ports.AddRange(portsRegion);
+            }
+            catch (Exception ex)
+            {
+                ex.InformGuga();
+                await Console.Out.WriteLineAsync($"Failed to fetch region alarms: {ex.Message}");
+                // Provide fallback region ports
+                ports.AddRange(new[] { 370, 371, 372, 373 });
+            }
+
+            await Task.WhenAll(freqTask, namesTask, tempTask);
+
+            var frequencies = await freqTask;
+            var channelNames = await namesTask;
+            var tempData = await tempTask;
+
+            // Mark frequencies with errors
+            foreach (var freq in frequencies)
+            {
+                if (freq?.details == null) continue;
+
+                foreach (var detail in freq.details)
+                {
+                    detail.HaveError = ports.Contains(detail.PortIn250);
+                }
+            }
+
+            if (ports.Contains(144) && !ports.Contains(145))
+            {
+                ports.Remove(144);
+                ports.Add(1025);
+            }
+
+            if (ports.Contains(145))
+            {
+                try
+                {
+                    using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+                    var response = await client.GetAsync("https://www.google.com");
+                    if (response.IsSuccessStatusCode)
+                    {
+                        ports.Remove(145);
+                        ports.Add(1024);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new ArgumentException("გუგა შეცდომა გვაქვს ინტერნეტის შემოწმებისას", ex);
+                }
+            }
+
+            model.SatelliteView = frequencies.ToList();
+            model.ChanellInfo = channelNames.Select(c => new ChanellInfoModel
+            {
+                ChanellName = c.Value,
+                IsDIsable = c.Value.Equals("test", StringComparison.OrdinalIgnoreCase),
+                Order = c.Key,
+                HaveError = ports.Contains(c.Key)
+            }).ToList();
+
+            model.TemperatureInfo = new TemperatureView
+            {
+                humidity = tempData.humidity,
+                temperature = tempData.temperature
+            };
+
+            return Ok(model);
+        }
+        catch (Exception ex)
+        {
+            ex.InformGuga();
+            return Ok(new UniteModel());
+        }
+    }
+
 }
