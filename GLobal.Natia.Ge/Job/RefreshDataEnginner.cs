@@ -17,6 +17,7 @@ public class RefreshDataEnginner : BackgroundService
     private List<int> _lastPorts = new();
     private Dictionary<int, string> _lastNames = new();
     private List<SatteliteViewMonitoring> _lastSatellite = new();
+    private List<ChanellInfoModel> _lastChanellInfo = new();
 
     public RefreshDataEnginner(
         ILogger<RefreshDataEnginner> logger,
@@ -125,6 +126,23 @@ public class RefreshDataEnginner : BackgroundService
                         temp.temperature, temp.humidity);
                 }
 
+
+                var chanelUpdate = names.Select(c => new ChanellInfoModel
+                {
+                    ChanellName = c.Value,
+                    IsDIsable = c.Value.Equals("test", StringComparison.OrdinalIgnoreCase),
+                    Order = c.Key,
+                    HaveError = ports.Contains(c.Key)
+                }).ToList();
+
+                if (!CompareChanellInfo(chanelUpdate, _lastChanellInfo))
+                {
+                    _lastChanellInfo = chanelUpdate;
+
+                    await _hub.Clients.All.SendAsync("chanellInfoUpdate", chanelUpdate, stoppingToken);
+                    _logger.LogInformation("🔄 Channel info updated. Channels={ChannelCount}.", chanelUpdate.Count());
+                }
+
                 if (!ports.SequenceEqual(_lastPorts) || !names.OrderBy(k => k.Key).SequenceEqual(_lastNames.OrderBy(k => k.Key)))
                 {
                     _lastPorts = ports.ToList();
@@ -187,4 +205,24 @@ public class RefreshDataEnginner : BackgroundService
 
         return true;
     }
+
+    private bool CompareChanellInfo(List<ChanellInfoModel> current, List<ChanellInfoModel> previous)
+    {
+        if (current.Count != previous.Count)
+            return false;
+
+        for (int i = 0; i < current.Count; i++)
+        {
+            var curr = current[i];
+            var prev = previous[i];
+
+            if (curr.ChanellName?.Equals(prev.ChanellName, StringComparison.OrdinalIgnoreCase)==false ||
+                curr.IsDIsable != prev.IsDIsable ||
+                curr.Order != prev.Order ||
+                curr.HaveError != prev.HaveError)
+                return false;
+        }
+        return true;
+    }
+
 }
