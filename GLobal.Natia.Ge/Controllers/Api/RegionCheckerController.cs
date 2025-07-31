@@ -12,6 +12,11 @@ public class RegionCheckerController : ControllerBase
     private readonly IGetEmrDataServices _region;
     private readonly ILogger<RegionCheckerController> _logger;
 
+    private static DateTime LastSentTimeTelavi = DateTime.MinValue;
+    private static DateTime LastSentTimeGori = DateTime.MinValue;
+    private static DateTime LastSentTimeKutaisi = DateTime.MinValue;
+    private static DateTime LastSentTimeFoti = DateTime.MinValue;
+
     public RegionCheckerController(IRedisService redis, IGetEmrDataServices region, ILogger<RegionCheckerController> logger)
     {
         _redis = redis;
@@ -42,9 +47,52 @@ public class RegionCheckerController : ControllerBase
         _logger.LogInformation("Fetching full region data via IGetEmrDataServices.");
         try
         {
-            var regions = await _region.Start();
-            _logger.LogInformation("Successfully fetched {Count} region entries.", regions?.Count() ?? 0);
-            return Ok(regions);
+            int count = 0;
+            var pingSender = new Ping();
+            var regions = new Dictionary<string, (string name, DateTime lastSent, Action<DateTime> updateLastSent)>
+            {
+                ["192.168.25.10"] = ("Telavi", LastSentTimeTelavi, val => LastSentTimeTelavi = val),
+                ["192.168.15.10"] = ("Kutaisi", LastSentTimeKutaisi, val => LastSentTimeKutaisi = val),
+                ["192.168.13.10"] = ("Gori", LastSentTimeGori, val => LastSentTimeGori = val),
+                ["192.168.14.10"] = ("Foti", LastSentTimeFoti, val => LastSentTimeFoti = val)
+            };
+
+            List<string> regionResult = new List<string>();
+
+            foreach (var region in regions)
+            {
+                var reply = await pingSender.SendPingAsync(region.Key);
+                if (region.Value.lastSent.AddMinutes(30) < DateTime.Now && reply.Status != IPStatus.Success)
+                {
+                    while (reply.Status != IPStatus.Success)
+                    {
+                        _logger.LogWarning("{Region} ping failed, retrying...", region.Value.name);
+                        count++;
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+
+                        if (count >= 3)
+                        {
+                            region.Value.updateLastSent(DateTime.Now);
+                            var text = $"{region.Value.name} Lost , Check Conection , May Optic Interupt!";
+                            regionResult.Add(text);
+                            _logger.LogError("{Region} is offline after 3 retries", region.Value.name);
+                            break;
+                        }
+
+                        reply = await pingSender.SendPingAsync(region.Key);
+                    }
+                }
+            }
+
+            if (regionResult.Count > 0)
+            {
+                _logger.LogInformation("Regions with issues: {Regions}", string.Join(", ", regionResult));
+                return Ok(string.Join(", ", regionResult));
+            }
+
+            var regionsAlarms = await _region.Start();
+            _logger.LogInformation("Successfully fetched {Count} region entries.", regionsAlarms?.Count() ?? 0);
+            return Ok(regionsAlarms);
         }
         catch (Exception ex)
         {
