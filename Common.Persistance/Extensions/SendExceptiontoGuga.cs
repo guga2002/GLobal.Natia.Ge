@@ -15,8 +15,8 @@ public static class SendExceptiontoGuga
 
     public static void InformGuga(this Exception exp)
     {
-        if ((DateTime.UtcNow - _lastSent).TotalSeconds < 60) return;
-        _lastSent = DateTime.UtcNow;
+        if ((DateTime.Now - _lastSent).TotalSeconds < 60) return;
+        _lastSent = DateTime.Now;
 
         Task.Run(() => SendMessage(BuildHtmlMessage(exp.Message, exp?.StackTrace ?? "")));
     }
