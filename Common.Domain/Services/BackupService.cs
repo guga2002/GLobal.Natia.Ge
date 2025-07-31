@@ -91,22 +91,23 @@ public class BackupService : IBackupService
         return true;
     }
 
-    public  bool IsTimeForBackup()
+    private DateTime? _lastBackupTime = null;
+
+    public bool IsTimeForBackup()
     {
         var now = DateTime.Now;
-        if ((now.Hour == 11 || now.Hour == 23) && now.Minute == 1)
+        var backupHours = new[] { 11, 23 };
+
+        if (backupHours.Contains(now.Hour) && now.Minute <= 10)
         {
-            if (_count < 1)
+            if (_lastBackupTime == null || _lastBackupTime.Value.Hour != now.Hour)
             {
-                _count++;
-                _logger.LogInformation("Backup time matched at {Time}.", now);
+                _lastBackupTime = now;
+                _logger.LogInformation("Backup triggered at {Time}", now);
                 return true;
             }
-            _count++;
-            return false;
         }
 
-        _count = 0;
         return false;
     }
 }
